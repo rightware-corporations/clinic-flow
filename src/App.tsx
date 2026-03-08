@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import PageTransition from "@/components/layout/PageTransition";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ServicesPage from "./pages/Services";
@@ -16,24 +18,34 @@ import SuperDashboard from "./pages/SuperDashboard";
 
 const queryClient = new QueryClient();
 
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/servicos" element={<PageTransition><ServicesPage /></PageTransition>} />
+        <Route path="/servicos/:slug" element={<PageTransition><ServiceDetailPage /></PageTransition>} />
+        <Route path="/agendar" element={<PageTransition><BookingPage /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        <Route path="/paciente" element={<PageTransition><PatientDashboard /></PageTransition>} />
+        <Route path="/profissional" element={<PageTransition><PractitionerDashboard /></PageTransition>} />
+        <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
+        <Route path="/super" element={<PageTransition><SuperDashboard /></PageTransition>} />
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/servicos" element={<ServicesPage />} />
-          <Route path="/servicos/:slug" element={<ServiceDetailPage />} />
-          <Route path="/agendar" element={<BookingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/paciente" element={<PatientDashboard />} />
-          <Route path="/profissional" element={<PractitionerDashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/super" element={<SuperDashboard />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AnimatedRoutes />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
