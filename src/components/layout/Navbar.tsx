@@ -72,7 +72,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Análises",
     description: "Hemograma, bioquímica, marcadores tumorais e perfis hormonais.",
-    href: "/servicos?cat=analises",
+    href: "/categoria/analises",
     icon: TestTubes,
     color: "bg-accent/10 text-accent",
     services: [
