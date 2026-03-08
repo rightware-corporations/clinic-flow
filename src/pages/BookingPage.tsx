@@ -189,31 +189,33 @@ export default function BookingPage() {
                 {/* Step 0: Service */}
                 {step === 0 && (
                   <div>
-                    <h2 className="text-xl font-bold mb-1">Selecione o serviço</h2>
-                    <p className="text-sm text-muted-foreground mb-5">Escolha o serviço que pretende agendar.</p>
+                    <h2 className="text-lg md:text-xl font-bold mb-1">Selecione o serviço</h2>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-5">Escolha o serviço que pretende agendar.</p>
                     <Input
                       placeholder="Pesquisar serviço..."
                       value={serviceSearch}
                       onChange={(e) => setServiceSearch(e.target.value)}
-                      className="mb-4 max-w-sm"
+                      className="mb-3 md:mb-4 max-w-sm h-9 md:h-10 text-sm"
                     />
-                    <div className="grid sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 max-h-[50vh] md:max-h-[60vh] overflow-y-auto pr-1">
                       {filteredServices.map((s) => (
                         <button
                           key={s.id}
                           onClick={() => { setSelectedService(s); setSelectedPractitioner(null); setAnyPractitioner(false); }}
-                          className={`text-left p-4 rounded-xl border-2 transition-all ${
+                          className={`text-left p-3 md:p-4 rounded-xl border-2 transition-all ${
                             selectedService?.id === s.id
                               ? "border-primary bg-primary/5"
                               : "border-border hover:border-primary/30 bg-card"
                           }`}
                         >
-                          <p className="font-medium text-sm mb-1">{s.name}</p>
-                          <p className="text-xs text-muted-foreground mb-2">{s.description.slice(0, 80)}...</p>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            {s.duration > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {s.duration}min</span>}
-                            {s.price !== undefined && s.price > 0 && <span className="font-semibold text-primary">{s.price}€</span>}
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-medium text-sm leading-tight">{s.name}</p>
+                            <div className="flex items-center gap-2 shrink-0 text-xs text-muted-foreground">
+                              {s.duration > 0 && <span className="flex items-center gap-0.5"><Clock className="w-3 h-3" />{s.duration}m</span>}
+                              {s.price !== undefined && s.price > 0 && <span className="font-semibold text-primary">{s.price}€</span>}
+                            </div>
                           </div>
+                          <p className="text-xs text-muted-foreground mt-1 hidden md:block">{s.description.slice(0, 80)}...</p>
                         </button>
                       ))}
                     </div>
