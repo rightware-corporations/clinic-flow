@@ -16,17 +16,17 @@ import {
 } from "lucide-react";
 
 const categories = [
-  { label: "Consultas", icon: Stethoscope, href: "/servicos?cat=consultas", color: "bg-primary/10 text-primary" },
-  { label: "Especialidades", icon: HeartPulse, href: "/servicos?cat=especialidades", color: "bg-destructive/10 text-destructive" },
-  { label: "Exames", icon: ScanLine, href: "/servicos?cat=exames", color: "bg-secondary/20 text-secondary" },
-  { label: "Análises", icon: TestTubes, href: "/servicos?cat=analises", color: "bg-accent/10 text-accent" },
-  { label: "Fisioterapia", icon: Dumbbell, href: "/servicos?cat=fisioterapia", color: "bg-warning/10 text-warning" },
-  { label: "Enfermagem", icon: Syringe, href: "/servicos?cat=enfermagem", color: "bg-primary/10 text-primary" },
-  { label: "Vacinação", icon: Shield, href: "/servicos?cat=vacinacao", color: "bg-success/10 text-success" },
-  { label: "Domicílio", icon: Home, href: "/servicos?cat=domicilio", color: "bg-secondary/20 text-secondary" },
-  { label: "Ambulância", icon: Ambulance, href: "/servicos?cat=ambulancia", color: "bg-destructive/10 text-destructive" },
-  { label: "Dentária", icon: Smile, href: "/servicos?cat=dentaria", color: "bg-accent/10 text-accent" },
-  { label: "Ocupacional", icon: Briefcase, href: "/servicos?cat=ocupacional", color: "bg-warning/10 text-warning" },
+  { label: "Consultas", icon: Stethoscope, href: "/categoria/consultas", color: "bg-primary/10 text-primary" },
+  { label: "Especialidades", icon: HeartPulse, href: "/categoria/especialidades", color: "bg-destructive/10 text-destructive" },
+  { label: "Exames", icon: ScanLine, href: "/categoria/exames", color: "bg-secondary/20 text-secondary" },
+  { label: "Análises", icon: TestTubes, href: "/categoria/analises", color: "bg-accent/10 text-accent" },
+  { label: "Fisioterapia", icon: Dumbbell, href: "/categoria/fisioterapia", color: "bg-warning/10 text-warning" },
+  { label: "Enfermagem", icon: Syringe, href: "/categoria/enfermagem", color: "bg-primary/10 text-primary" },
+  { label: "Vacinação", icon: Shield, href: "/categoria/vacinacao", color: "bg-success/10 text-success" },
+  { label: "Domicílio", icon: Home, href: "/categoria/domicilio", color: "bg-secondary/20 text-secondary" },
+  { label: "Ambulância", icon: Ambulance, href: "/categoria/ambulancia", color: "bg-destructive/10 text-destructive" },
+  { label: "Dentária", icon: Smile, href: "/categoria/dentaria", color: "bg-accent/10 text-accent" },
+  { label: "Ocupacional", icon: Briefcase, href: "/categoria/ocupacional", color: "bg-warning/10 text-warning" },
 ];
 
 const containerVariants = {

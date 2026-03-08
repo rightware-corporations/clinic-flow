@@ -36,7 +36,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Consultas",
     description: "Medicina geral e familiar, check-ups e orientação clínica personalizada.",
-    href: "/servicos?cat=consultas",
+    href: "/categoria/consultas",
     icon: Stethoscope,
     color: "bg-primary/10 text-primary",
     services: [
@@ -48,7 +48,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Especialidades",
     description: "Cardiologia, dermatologia, ortopedia e mais de 15 áreas médicas.",
-    href: "/servicos?cat=especialidades",
+    href: "/categoria/especialidades",
     icon: HeartPulse,
     color: "bg-destructive/10 text-destructive",
     services: [
@@ -60,7 +60,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Exames",
     description: "Eletrocardiograma, ecografia, raio-X e exames de diagnóstico avançados.",
-    href: "/servicos?cat=exames",
+    href: "/categoria/exames",
     icon: ScanLine,
     color: "bg-secondary/20 text-secondary",
     services: [
@@ -72,7 +72,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Análises",
     description: "Hemograma, bioquímica, marcadores tumorais e perfis hormonais.",
-    href: "/servicos?cat=analises",
+    href: "/categoria/analises",
     icon: TestTubes,
     color: "bg-accent/10 text-accent",
     services: [
@@ -84,7 +84,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Fisioterapia",
     description: "Reabilitação física, terapia manual e recuperação pós-cirúrgica.",
-    href: "/servicos?cat=fisioterapia",
+    href: "/categoria/fisioterapia",
     icon: Dumbbell,
     color: "bg-warning/10 text-warning",
     services: [
@@ -95,7 +95,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Vacinação",
     description: "Vacinas do plano nacional, viajantes e gripe sazonal.",
-    href: "/servicos?cat=vacinacao",
+    href: "/categoria/vacinacao",
     icon: Shield,
     color: "bg-success/10 text-success",
     services: [
@@ -106,7 +106,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Enfermagem",
     description: "Tratamentos, pensos, administração de injetáveis e cuidados de enfermagem.",
-    href: "/servicos?cat=enfermagem",
+    href: "/categoria/enfermagem",
     icon: Syringe,
     color: "bg-primary/10 text-primary",
     services: [
@@ -117,7 +117,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Domicílio",
     description: "Enfermagem e cuidados médicos no conforto do seu lar.",
-    href: "/servicos?cat=domicilio",
+    href: "/categoria/domicilio",
     icon: Home,
     color: "bg-secondary/20 text-secondary",
     services: [
@@ -128,7 +128,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Ambulância",
     description: "Transporte medicalizado seguro para consultas e exames.",
-    href: "/servicos?cat=ambulancia",
+    href: "/categoria/ambulancia",
     icon: Ambulance,
     color: "bg-destructive/10 text-destructive",
     services: [
@@ -138,7 +138,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Dentária",
     description: "Consultas, destartarização, restaurações e cirurgia oral.",
-    href: "/servicos?cat=dentaria",
+    href: "/categoria/dentaria",
     icon: Smile,
     color: "bg-accent/10 text-accent",
     services: [
@@ -149,7 +149,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Ocupacional",
     description: "Exames de admissão, periódicos e fichas de aptidão para empresas.",
-    href: "/servicos?cat=ocupacional",
+    href: "/categoria/ocupacional",
     icon: Briefcase,
     color: "bg-warning/10 text-warning",
     services: [
