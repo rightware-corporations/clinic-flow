@@ -341,25 +341,25 @@ export default function BookingPage() {
 
                 {/* Step 4: Patient Data */}
                 {step === 4 && (
-                  <div>
-                    <h2 className="text-xl font-bold mb-1">Dados do paciente</h2>
-                    <p className="text-sm text-muted-foreground mb-5">Preencha os seus dados para completar a marcação.</p>
-                    <div className="space-y-4 max-w-md">
+                  <div className="pb-20 md:pb-0">
+                    <h2 className="text-lg md:text-xl font-bold mb-1">Dados do paciente</h2>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-4 md:mb-5">Preencha os seus dados para completar a marcação.</p>
+                    <div className="space-y-4 w-full md:max-w-md">
                       <div>
-                        <Label htmlFor="name">Nome completo *</Label>
-                        <Input id="name" value={patientData.name} onChange={(e) => setPatientData((d) => ({ ...d, name: e.target.value }))} />
+                        <Label htmlFor="name" className="text-sm">Nome completo *</Label>
+                        <Input id="name" className="h-11 mt-1.5" value={patientData.name} onChange={(e) => setPatientData((d) => ({ ...d, name: e.target.value }))} />
                       </div>
                       <div>
-                        <Label htmlFor="email">Email *</Label>
-                        <Input id="email" type="email" value={patientData.email} onChange={(e) => setPatientData((d) => ({ ...d, email: e.target.value }))} />
+                        <Label htmlFor="email" className="text-sm">Email *</Label>
+                        <Input id="email" type="email" className="h-11 mt-1.5" value={patientData.email} onChange={(e) => setPatientData((d) => ({ ...d, email: e.target.value }))} />
                       </div>
                       <div>
-                        <Label htmlFor="phone">Telemóvel *</Label>
-                        <Input id="phone" type="tel" value={patientData.phone} onChange={(e) => setPatientData((d) => ({ ...d, phone: e.target.value }))} />
+                        <Label htmlFor="phone" className="text-sm">Telemóvel *</Label>
+                        <Input id="phone" type="tel" className="h-11 mt-1.5" value={patientData.phone} onChange={(e) => setPatientData((d) => ({ ...d, phone: e.target.value }))} />
                       </div>
                       <div>
-                        <Label htmlFor="notes">Observações</Label>
-                        <Input id="notes" value={patientData.notes} onChange={(e) => setPatientData((d) => ({ ...d, notes: e.target.value }))} placeholder="Informações adicionais (opcional)" />
+                        <Label htmlFor="notes" className="text-sm">Observações</Label>
+                        <Input id="notes" className="h-11 mt-1.5" value={patientData.notes} onChange={(e) => setPatientData((d) => ({ ...d, notes: e.target.value }))} placeholder="Informações adicionais (opcional)" />
                       </div>
                     </div>
                   </div>
