@@ -95,7 +95,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Vacinação",
     description: "Vacinas do plano nacional, viajantes e gripe sazonal.",
-    href: "/servicos?cat=vacinacao",
+    href: "/categoria/vacinacao",
     icon: Shield,
     color: "bg-success/10 text-success",
     services: [
