@@ -8,15 +8,26 @@ const features = [
   { icon: Award, title: "Certificação", desc: "Clínica certificada com padrões europeus." },
 ];
 
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: "easeOut" } },
+};
+
 export default function AboutSection() {
   return (
     <section className="py-16 md:py-24 surface-gradient">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Sobre a MedClínica</h2>
             <p className="text-muted-foreground leading-relaxed mb-6">
@@ -31,15 +42,19 @@ export default function AboutSection() {
             </p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            {features.map((feat, i) => (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            className="grid sm:grid-cols-2 gap-4"
+          >
+            {features.map((feat) => (
               <motion.div
                 key={feat.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="medical-card p-5"
+                variants={itemVariants}
+                whileHover={{ y: -3, scale: 1.02 }}
+                className="medical-card p-5 cursor-default"
               >
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
                   <feat.icon className="w-5 h-5 text-primary" />
@@ -48,7 +63,7 @@ export default function AboutSection() {
                 <p className="text-xs text-muted-foreground">{feat.desc}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

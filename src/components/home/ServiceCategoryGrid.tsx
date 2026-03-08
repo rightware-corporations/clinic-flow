@@ -29,14 +29,31 @@ const categories = [
   { label: "Ocupacional", icon: Briefcase, href: "/servicos?cat=ocupacional", color: "bg-warning/10 text-warning" },
 ];
 
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 24, scale: 0.95 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
 export default function ServiceCategoryGrid() {
   return (
     <section className="py-16 md:py-24">
       <div className="container">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
@@ -46,36 +63,46 @@ export default function ServiceCategoryGrid() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
-          {categories.map((cat, i) => (
-            <motion.div
-              key={cat.label}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.04 }}
-            >
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4"
+        >
+          {categories.map((cat) => (
+            <motion.div key={cat.label} variants={cardVariants}>
               <Link
                 to={cat.href}
                 className="medical-card flex flex-col items-center gap-3 p-5 text-center group"
               >
-                <div className={`w-12 h-12 rounded-xl ${cat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
+                <motion.div
+                  whileHover={{ scale: 1.15, rotate: 3 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className={`w-12 h-12 rounded-xl ${cat.color} flex items-center justify-center`}
+                >
                   <cat.icon className="w-5 h-5" />
-                </div>
+                </motion.div>
                 <span className="text-sm font-medium text-foreground">{cat.label}</span>
               </Link>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
-        <div className="text-center mt-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5 }}
+          className="text-center mt-8"
+        >
           <Link
             to="/servicos"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
           >
             Ver todos os serviços <ArrowRight className="w-4 h-4" />
           </Link>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
