@@ -60,7 +60,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Exames",
     description: "Eletrocardiograma, ecografia, raio-X e exames de diagnóstico avançados.",
-    href: "/servicos?cat=exames",
+    href: "/categoria/exames",
     icon: ScanLine,
     color: "bg-secondary/20 text-secondary",
     services: [
