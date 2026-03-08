@@ -128,7 +128,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Ambulância",
     description: "Transporte medicalizado seguro para consultas e exames.",
-    href: "/servicos?cat=ambulancia",
+    href: "/categoria/ambulancia",
     icon: Ambulance,
     color: "bg-destructive/10 text-destructive",
     services: [
