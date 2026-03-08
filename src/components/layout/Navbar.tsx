@@ -149,7 +149,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Ocupacional",
     description: "Exames de admissão, periódicos e fichas de aptidão para empresas.",
-    href: "/servicos?cat=ocupacional",
+    href: "/categoria/ocupacional",
     icon: Briefcase,
     color: "bg-warning/10 text-warning",
     services: [
