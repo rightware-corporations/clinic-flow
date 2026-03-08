@@ -36,7 +36,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Consultas",
     description: "Medicina geral e familiar, check-ups e orientação clínica personalizada.",
-    href: "/servicos?cat=consultas",
+    href: "/categoria/consultas",
     icon: Stethoscope,
     color: "bg-primary/10 text-primary",
     services: [
