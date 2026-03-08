@@ -48,7 +48,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Especialidades",
     description: "Cardiologia, dermatologia, ortopedia e mais de 15 áreas médicas.",
-    href: "/servicos?cat=especialidades",
+    href: "/categoria/especialidades",
     icon: HeartPulse,
     color: "bg-destructive/10 text-destructive",
     services: [
