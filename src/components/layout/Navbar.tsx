@@ -106,7 +106,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Enfermagem",
     description: "Tratamentos, pensos, administração de injetáveis e cuidados de enfermagem.",
-    href: "/servicos?cat=enfermagem",
+    href: "/categoria/enfermagem",
     icon: Syringe,
     color: "bg-primary/10 text-primary",
     services: [
