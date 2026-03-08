@@ -197,7 +197,7 @@ export default function BookingPage() {
                       onChange={(e) => setServiceSearch(e.target.value)}
                       className="mb-3 md:mb-4 max-w-sm h-9 md:h-10 text-sm"
                     />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 max-h-[50vh] md:max-h-[60vh] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1">
                       {filteredServices.map((s) => (
                         <button
                           key={s.id}
@@ -411,7 +411,7 @@ export default function BookingPage() {
             </AnimatePresence>
 
             {/* Navigation — sticky on mobile */}
-            <div className="fixed bottom-0 inset-x-0 z-40 bg-background border-t p-3 flex items-center justify-between md:static md:z-auto md:bg-transparent md:border-t md:p-0 md:mt-8 md:pt-6">
+            <div className="fixed bottom-16 inset-x-0 z-40 bg-background border-t p-3 flex items-center justify-between md:static md:bottom-auto md:z-auto md:bg-transparent md:border-t md:p-0 md:mt-8 md:pt-6">
               <Button
                 variant="outline"
                 onClick={handleBack}
@@ -437,7 +437,7 @@ export default function BookingPage() {
               </Button>
             </div>
             {/* Spacer for fixed nav on mobile */}
-            <div className="h-16 md:hidden" />
+            <div className="h-24 md:hidden" />
           </div>
 
           {/* Summary Panel */}
