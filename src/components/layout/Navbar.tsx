@@ -138,7 +138,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Dentária",
     description: "Consultas, destartarização, restaurações e cirurgia oral.",
-    href: "/servicos?cat=dentaria",
+    href: "/categoria/dentaria",
     icon: Smile,
     color: "bg-accent/10 text-accent",
     services: [
