@@ -15,6 +15,7 @@ import PatientDashboard from "./pages/PatientDashboard";
 import PractitionerDashboard from "./pages/PractitionerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuperDashboard from "./pages/SuperDashboard";
+import CategoryPage from "./pages/CategoryPage";
 
 const queryClient = new QueryClient();
 
