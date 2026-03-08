@@ -142,15 +142,15 @@ export default function BookingPage() {
   return (
     <Layout hideFooter>
       <div className="container py-6 md:py-10">
-        {/* Stepper */}
-        <div className="mb-8 overflow-x-auto">
-          <div className="flex items-center justify-center gap-1 min-w-max mx-auto">
+        {/* Stepper — compact on mobile */}
+        <div className="mb-4 md:mb-8 overflow-x-auto scrollbar-none">
+          <div className="flex items-center justify-center gap-0.5 md:gap-1 min-w-max mx-auto">
             {STEPS.map((label, i) => (
               <div key={label} className="flex items-center">
                 <button
                   onClick={() => i < step && setStep(i)}
                   disabled={i > step}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs font-medium transition-all ${
                     i === step
                       ? "stepper-active"
                       : i < step
@@ -159,16 +159,16 @@ export default function BookingPage() {
                   }`}
                 >
                   {i < step ? (
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   ) : (
-                    <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] font-bold border-current">
+                    <span className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center text-[8px] md:text-[10px] font-bold border-current">
                       {i + 1}
                     </span>
                   )}
                   <span className="hidden sm:inline">{label}</span>
                 </button>
                 {i < STEPS.length - 1 && (
-                  <div className={`w-6 h-px mx-1 ${i < step ? "bg-accent" : "bg-border"}`} />
+                  <div className={`w-3 md:w-6 h-px mx-0.5 md:mx-1 ${i < step ? "bg-accent" : "bg-border"}`} />
                 )}
               </div>
             ))}
