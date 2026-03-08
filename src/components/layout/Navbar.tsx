@@ -117,7 +117,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Domicílio",
     description: "Enfermagem e cuidados médicos no conforto do seu lar.",
-    href: "/servicos?cat=domicilio",
+    href: "/categoria/domicilio",
     icon: Home,
     color: "bg-secondary/20 text-secondary",
     services: [
