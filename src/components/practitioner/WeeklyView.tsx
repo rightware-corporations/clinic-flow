@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { format, startOfWeek, addDays, isSameDay, isToday } from "date-fns";
 import { pt } from "date-fns/locale";
