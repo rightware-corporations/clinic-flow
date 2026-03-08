@@ -139,12 +139,14 @@ export default function PractitionerDashboard() {
   return (
     <Layout>
       <div className="container py-8 md:py-12">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Agenda Profissional</h1>
             <p className="text-muted-foreground text-sm">Dra. Ana Mendes · Medicina Geral</p>
           </div>
-          <BlockTimeDialog onBlock={handleBlock} />
+          <div className="flex justify-start md:justify-end">
+            <BlockTimeDialog onBlock={handleBlock} />
+          </div>
         </div>
 
         <Tabs defaultValue="today" className="space-y-6">
