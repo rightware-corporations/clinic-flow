@@ -51,24 +51,18 @@ export default function WeeklyView({ appointments, weekOffset, onWeekChange }: W
     [weekStart.toISOString()]
   );
 
-  // Reset selection on week change — default to today's index if in range
+  // Reset selection on week change — default to today's pair if in range
   useEffect(() => {
     const todayIdx = days.findIndex((d) => isToday(d));
-    if (todayIdx >= 0) {
-      setSelectedDayIndices([todayIdx, Math.min(todayIdx + 1, 6)]);
-    } else {
-      setSelectedDayIndices([0, 1]);
-    }
+    const start = todayIdx >= 0 ? todayIdx : 0;
+    setSelectedDayIndices([start, Math.min(start + 1, 6)]);
   }, [weekOffset]);
 
-  const toggleDay = (idx: number) => {
-    setSelectedDayIndices((prev) => {
-      if (prev.includes(idx)) {
-        if (prev.length <= 1) return prev; // keep at least 1
-        return prev.filter((i) => i !== idx).sort((a, b) => a - b);
-      }
-      return [...prev, idx].sort((a, b) => a - b);
-    });
+  // Selecting a pair: click any day to show that day + next
+  const selectPair = (startIdx: number) => {
+    const end = Math.min(startIdx + 1, 6);
+    setSelectedDayIndices([startIdx, end]);
+    setComboOpen(false);
   };
 
   const visibleDays = isMobile
