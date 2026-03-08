@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, Clock, User, Ban, Check, Eye, Play, X, UserX, AlertTriangle } from "lucide-react";
+import { motion } from "framer-motion";
+import { CalendarDays, Clock, Play, X, Check, UserX, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -15,6 +14,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Layout from "@/components/layout/Layout";
+import BlockTimeDialog from "@/components/practitioner/BlockTimeDialog";
+import WeeklyView from "@/components/practitioner/WeeklyView";
 import { toast } from "sonner";
 
 type AppointmentStatus = "confirmed" | "pending" | "blocked" | "completed" | "in_progress" | "cancelled" | "no_show";
@@ -49,10 +50,9 @@ const statusConfig: Record<AppointmentStatus, { label: string; color: string }> 
 
 export default function PractitionerDashboard() {
   const [agenda, setAgenda] = useState<Appointment[]>(initialAgenda);
+  const [weekOffset, setWeekOffset] = useState(0);
   const [dialogState, setDialogState] = useState<{ open: boolean; action: "cancel" | "no_show" | null; aptId: string | null }>({
-    open: false,
-    action: null,
-    aptId: null,
+    open: false, action: null, aptId: null,
   });
 
   const updateStatus = (id: string, status: AppointmentStatus) => {
@@ -69,11 +69,31 @@ export default function PractitionerDashboard() {
     toast.success(`Consulta de ${apt.patient} concluída`);
   };
 
+  const handleBlock = (startTime: string, endTime: string, reason: string) => {
+    // Generate blocked slots in 30min intervals
+    const newBlocks: Appointment[] = [];
+    let [h, m] = startTime.split(":").map(Number);
+    let idx = agenda.length;
+    while (`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}` < endTime) {
+      const time = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      newBlocks.push({
+        id: `block-${idx++}`,
+        patient: "--",
+        service: reason || "Bloqueado",
+        time,
+        duration: 30,
+        status: "blocked",
+      });
+      m += 30;
+      if (m >= 60) { h++; m = 0; }
+    }
+    setAgenda((prev) => [...prev, ...newBlocks].sort((a, b) => a.time.localeCompare(b.time)));
+  };
+
   const confirmAction = () => {
     if (!dialogState.aptId || !dialogState.action) return;
     const apt = agenda.find((a) => a.id === dialogState.aptId);
     if (!apt) return;
-
     if (dialogState.action === "cancel") {
       updateStatus(apt.id, "cancelled");
       toast("Marcação cancelada", { description: `${apt.patient} — ${apt.time}` });
@@ -124,9 +144,7 @@ export default function PractitionerDashboard() {
             <h1 className="text-2xl md:text-3xl font-bold">Agenda Profissional</h1>
             <p className="text-muted-foreground text-sm">Dra. Ana Mendes · Medicina Geral</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="gap-1"><Ban className="w-4 h-4" /> Bloquear Horário</Button>
-          </div>
+          <BlockTimeDialog onBlock={handleBlock} />
         </div>
 
         <Tabs defaultValue="today" className="space-y-6">
@@ -170,11 +188,7 @@ export default function PractitionerDashboard() {
           </TabsContent>
 
           <TabsContent value="week">
-            <div className="text-center py-16">
-              <CalendarDays className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="font-semibold mb-1">Vista semanal</h3>
-              <p className="text-sm text-muted-foreground">Vista semanal disponível em breve.</p>
-            </div>
+            <WeeklyView appointments={agenda} weekOffset={weekOffset} onWeekChange={setWeekOffset} />
           </TabsContent>
         </Tabs>
       </div>
