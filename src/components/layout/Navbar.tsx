@@ -84,7 +84,7 @@ const megaCategories: MegaCategory[] = [
   {
     label: "Fisioterapia",
     description: "Reabilitação física, terapia manual e recuperação pós-cirúrgica.",
-    href: "/servicos?cat=fisioterapia",
+    href: "/categoria/fisioterapia",
     icon: Dumbbell,
     color: "bg-warning/10 text-warning",
     services: [
