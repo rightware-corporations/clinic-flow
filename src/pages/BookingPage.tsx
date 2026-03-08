@@ -410,8 +410,8 @@ export default function BookingPage() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t">
+            {/* Navigation — sticky on mobile */}
+            <div className="fixed bottom-0 inset-x-0 z-40 bg-background border-t p-3 flex items-center justify-between md:static md:z-auto md:bg-transparent md:border-t md:p-0 md:mt-8 md:pt-6">
               <Button
                 variant="outline"
                 onClick={handleBack}
@@ -436,6 +436,8 @@ export default function BookingPage() {
                 )}
               </Button>
             </div>
+            {/* Spacer for fixed nav on mobile */}
+            <div className="h-16 md:hidden" />
           </div>
 
           {/* Summary Panel */}
