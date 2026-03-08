@@ -197,7 +197,7 @@ export default function BookingPage() {
                       onChange={(e) => setServiceSearch(e.target.value)}
                       className="mb-3 md:mb-4 max-w-sm h-9 md:h-10 text-sm"
                     />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 max-h-[50vh] md:max-h-[60vh] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1">
                       {filteredServices.map((s) => (
                         <button
                           key={s.id}
