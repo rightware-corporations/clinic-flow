@@ -437,7 +437,7 @@ export default function BookingPage() {
               </Button>
             </div>
             {/* Spacer for fixed nav on mobile */}
-            <div className="h-16 md:hidden" />
+            <div className="h-24 md:hidden" />
           </div>
 
           {/* Summary Panel */}
