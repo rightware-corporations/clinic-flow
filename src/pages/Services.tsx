@@ -1,12 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Search, Clock, AlertCircle, ArrowRight } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Clock, AlertCircle, ArrowRight, Check, ChevronsUpDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Layout from "@/components/layout/Layout";
 import { services, categoryLabels, type ServiceCategory } from "@/data/services";
+import { cn } from "@/lib/utils";
 
 const allCategories = Object.keys(categoryLabels) as ServiceCategory[];
 
