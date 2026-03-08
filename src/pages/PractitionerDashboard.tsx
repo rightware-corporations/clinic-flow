@@ -109,23 +109,23 @@ export default function PractitionerDashboard() {
       case "confirmed":
       case "pending":
         return (
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Iniciar" onClick={() => handleStart(apt)}>
-              <Play className="w-4 h-4" />
+          <div className="flex gap-1.5 md:gap-1">
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-primary hover:text-primary hover:bg-primary/10" title="Iniciar" onClick={() => handleStart(apt)}>
+              <Play className="w-4 h-4 md:w-4 md:h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" title="Cancelar" onClick={() => setDialogState({ open: true, action: "cancel", aptId: apt.id })}>
-              <X className="w-4 h-4" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-destructive hover:text-destructive hover:bg-destructive/10" title="Cancelar" onClick={() => setDialogState({ open: true, action: "cancel", aptId: apt.id })}>
+              <X className="w-4 h-4 md:w-4 md:h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-warning hover:text-warning" title="Não compareceu" onClick={() => setDialogState({ open: true, action: "no_show", aptId: apt.id })}>
-              <UserX className="w-4 h-4" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-warning hover:text-warning hover:bg-warning/10" title="Não compareceu" onClick={() => setDialogState({ open: true, action: "no_show", aptId: apt.id })}>
+              <UserX className="w-4 h-4 md:w-4 md:h-4" />
             </Button>
           </div>
         );
       case "in_progress":
         return (
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:text-success" title="Concluir" onClick={() => handleComplete(apt)}>
-              <Check className="w-4 h-4" />
+          <div className="flex gap-1.5 md:gap-1">
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-success hover:text-success hover:bg-success/10" title="Concluir" onClick={() => handleComplete(apt)}>
+              <Check className="w-4 h-4 md:w-4 md:h-4" />
             </Button>
           </div>
         );
@@ -156,7 +156,7 @@ export default function PractitionerDashboard() {
           </TabsList>
 
           <TabsContent value="today">
-            <div className="space-y-2">
+            <div className="space-y-3">
               {agenda.map((apt, i) => {
                 const isDimmed = apt.status === "blocked" || apt.status === "cancelled" || apt.status === "no_show";
                 return (
@@ -165,20 +165,20 @@ export default function PractitionerDashboard() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    className={`medical-card p-4 flex items-center justify-between gap-3 ${isDimmed ? "opacity-50" : ""} ${apt.status === "in_progress" ? "ring-2 ring-primary/30 border-primary/40" : ""}`}
+                    className={`medical-card p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${isDimmed ? "opacity-50" : ""} ${apt.status === "in_progress" ? "ring-2 ring-primary/30 border-primary/40" : ""}`}
                   >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="text-center min-w-[48px] shrink-0">
-                        <p className="text-lg font-bold text-primary">{apt.time}</p>
-                        <p className="text-[10px] text-muted-foreground">{apt.duration}min</p>
+                    <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                      <div className="text-center min-w-[56px] md:min-w-[60px] shrink-0">
+                        <p className="text-xl md:text-lg font-bold text-primary">{apt.time}</p>
+                        <p className="text-[11px] md:text-[10px] text-muted-foreground">{apt.duration}min</p>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">{apt.patient}</p>
-                        <p className="text-xs text-muted-foreground truncate">{apt.service}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold md:font-medium text-base md:text-sm">{apt.patient}</p>
+                        <p className="text-sm md:text-xs text-muted-foreground line-clamp-1">{apt.service}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${statusConfig[apt.status].color}`}>
+                    <div className="flex items-center justify-between md:justify-end gap-3 md:gap-2 shrink-0">
+                      <span className={`px-2.5 md:px-2 py-1 md:py-0.5 rounded-full text-xs md:text-[10px] font-medium whitespace-nowrap ${statusConfig[apt.status].color}`}>
                         {statusConfig[apt.status].label}
                       </span>
                       {getActions(apt)}
