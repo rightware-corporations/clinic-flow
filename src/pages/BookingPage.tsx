@@ -142,15 +142,15 @@ export default function BookingPage() {
   return (
     <Layout hideFooter>
       <div className="container py-6 md:py-10">
-        {/* Stepper */}
-        <div className="mb-8 overflow-x-auto">
-          <div className="flex items-center justify-center gap-1 min-w-max mx-auto">
+        {/* Stepper — compact on mobile */}
+        <div className="mb-4 md:mb-8 overflow-x-auto scrollbar-none">
+          <div className="flex items-center justify-center gap-0.5 md:gap-1 min-w-max mx-auto">
             {STEPS.map((label, i) => (
               <div key={label} className="flex items-center">
                 <button
                   onClick={() => i < step && setStep(i)}
                   disabled={i > step}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs font-medium transition-all ${
                     i === step
                       ? "stepper-active"
                       : i < step
@@ -159,16 +159,16 @@ export default function BookingPage() {
                   }`}
                 >
                   {i < step ? (
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   ) : (
-                    <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] font-bold border-current">
+                    <span className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center text-[8px] md:text-[10px] font-bold border-current">
                       {i + 1}
                     </span>
                   )}
                   <span className="hidden sm:inline">{label}</span>
                 </button>
                 {i < STEPS.length - 1 && (
-                  <div className={`w-6 h-px mx-1 ${i < step ? "bg-accent" : "bg-border"}`} />
+                  <div className={`w-3 md:w-6 h-px mx-0.5 md:mx-1 ${i < step ? "bg-accent" : "bg-border"}`} />
                 )}
               </div>
             ))}
@@ -189,31 +189,33 @@ export default function BookingPage() {
                 {/* Step 0: Service */}
                 {step === 0 && (
                   <div>
-                    <h2 className="text-xl font-bold mb-1">Selecione o serviço</h2>
-                    <p className="text-sm text-muted-foreground mb-5">Escolha o serviço que pretende agendar.</p>
+                    <h2 className="text-lg md:text-xl font-bold mb-1">Selecione o serviço</h2>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-5">Escolha o serviço que pretende agendar.</p>
                     <Input
                       placeholder="Pesquisar serviço..."
                       value={serviceSearch}
                       onChange={(e) => setServiceSearch(e.target.value)}
-                      className="mb-4 max-w-sm"
+                      className="mb-3 md:mb-4 max-w-sm h-9 md:h-10 text-sm"
                     />
-                    <div className="grid sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 max-h-[50vh] md:max-h-[60vh] overflow-y-auto pr-1">
                       {filteredServices.map((s) => (
                         <button
                           key={s.id}
                           onClick={() => { setSelectedService(s); setSelectedPractitioner(null); setAnyPractitioner(false); }}
-                          className={`text-left p-4 rounded-xl border-2 transition-all ${
+                          className={`text-left p-3 md:p-4 rounded-xl border-2 transition-all ${
                             selectedService?.id === s.id
                               ? "border-primary bg-primary/5"
                               : "border-border hover:border-primary/30 bg-card"
                           }`}
                         >
-                          <p className="font-medium text-sm mb-1">{s.name}</p>
-                          <p className="text-xs text-muted-foreground mb-2">{s.description.slice(0, 80)}...</p>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            {s.duration > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {s.duration}min</span>}
-                            {s.price !== undefined && s.price > 0 && <span className="font-semibold text-primary">{s.price}€</span>}
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-medium text-sm leading-tight">{s.name}</p>
+                            <div className="flex items-center gap-2 shrink-0 text-xs text-muted-foreground">
+                              {s.duration > 0 && <span className="flex items-center gap-0.5"><Clock className="w-3 h-3" />{s.duration}m</span>}
+                              {s.price !== undefined && s.price > 0 && <span className="font-semibold text-primary">{s.price}€</span>}
+                            </div>
                           </div>
+                          <p className="text-xs text-muted-foreground mt-1 hidden md:block">{s.description.slice(0, 80)}...</p>
                         </button>
                       ))}
                     </div>
