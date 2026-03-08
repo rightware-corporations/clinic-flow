@@ -109,23 +109,23 @@ export default function PractitionerDashboard() {
       case "confirmed":
       case "pending":
         return (
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Iniciar" onClick={() => handleStart(apt)}>
-              <Play className="w-4 h-4" />
+          <div className="flex gap-1.5 md:gap-1">
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-primary hover:text-primary hover:bg-primary/10" title="Iniciar" onClick={() => handleStart(apt)}>
+              <Play className="w-4 h-4 md:w-4 md:h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" title="Cancelar" onClick={() => setDialogState({ open: true, action: "cancel", aptId: apt.id })}>
-              <X className="w-4 h-4" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-destructive hover:text-destructive hover:bg-destructive/10" title="Cancelar" onClick={() => setDialogState({ open: true, action: "cancel", aptId: apt.id })}>
+              <X className="w-4 h-4 md:w-4 md:h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-warning hover:text-warning" title="Não compareceu" onClick={() => setDialogState({ open: true, action: "no_show", aptId: apt.id })}>
-              <UserX className="w-4 h-4" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-warning hover:text-warning hover:bg-warning/10" title="Não compareceu" onClick={() => setDialogState({ open: true, action: "no_show", aptId: apt.id })}>
+              <UserX className="w-4 h-4 md:w-4 md:h-4" />
             </Button>
           </div>
         );
       case "in_progress":
         return (
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:text-success" title="Concluir" onClick={() => handleComplete(apt)}>
-              <Check className="w-4 h-4" />
+          <div className="flex gap-1.5 md:gap-1">
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-success hover:text-success hover:bg-success/10" title="Concluir" onClick={() => handleComplete(apt)}>
+              <Check className="w-4 h-4 md:w-4 md:h-4" />
             </Button>
           </div>
         );
