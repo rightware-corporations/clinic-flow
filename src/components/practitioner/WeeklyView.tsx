@@ -129,12 +129,13 @@ export default function WeeklyView({ appointments, weekOffset, onWeekChange }: W
                       <CommandItem
                         key={idx}
                         value={label}
-                        onSelect={() => toggleDay(idx)}
+                        onSelect={() => selectPair(idx)}
                         className="capitalize"
                       >
                         <Check className={cn("w-4 h-4 mr-2 shrink-0", isSelected ? "opacity-100" : "opacity-0")} />
                         <span className={cn("flex-1", todayMark && "font-semibold text-primary")}>
                           {label}
+                          {idx < 6 && <span className="ml-1 text-muted-foreground text-[10px]">— {format(days[Math.min(idx + 1, 6)], "EEE d", { locale: pt })}</span>}
                           {todayMark && <span className="ml-1.5 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">hoje</span>}
                         </span>
                       </CommandItem>
