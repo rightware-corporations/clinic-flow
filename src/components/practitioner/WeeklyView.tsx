@@ -1,10 +1,13 @@
-import React, { useMemo, useState, useRef, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { format, startOfWeek, addDays, isSameDay, isToday } from "date-fns";
 import { pt } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 type AppointmentStatus = "confirmed" | "pending" | "blocked" | "completed" | "in_progress" | "cancelled" | "no_show";
 
@@ -40,21 +43,44 @@ export default function WeeklyView({ appointments, weekOffset, onWeekChange }: W
   const isMobile = useIsMobile();
   const today = new Date();
   const weekStart = startOfWeek(addDays(today, weekOffset * 7), { weekStartsOn: 1 });
-  const [mobileStartIdx, setMobileStartIdx] = useState(0);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const [selectedDayIndices, setSelectedDayIndices] = useState<number[]>([0, 1]);
+  const [comboOpen, setComboOpen] = useState(false);
 
   const days = useMemo(() =>
     Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
     [weekStart.toISOString()]
   );
 
-  // Reset mobile index on week change
-  useEffect(() => { setMobileStartIdx(0); }, [weekOffset]);
+  // Reset selection on week change — default to today's index if in range
+  useEffect(() => {
+    const todayIdx = days.findIndex((d) => isToday(d));
+    if (todayIdx >= 0) {
+      setSelectedDayIndices([todayIdx, Math.min(todayIdx + 1, 6)]);
+    } else {
+      setSelectedDayIndices([0, 1]);
+    }
+  }, [weekOffset]);
 
-  const visibleDays = isMobile ? days.slice(mobileStartIdx, mobileStartIdx + 2) : days;
+  const toggleDay = (idx: number) => {
+    setSelectedDayIndices((prev) => {
+      if (prev.includes(idx)) {
+        if (prev.length <= 1) return prev; // keep at least 1
+        return prev.filter((i) => i !== idx).sort((a, b) => a - b);
+      }
+      return [...prev, idx].sort((a, b) => a - b);
+    });
+  };
+
+  const visibleDays = isMobile
+    ? selectedDayIndices.map((i) => days[i]).filter(Boolean)
+    : days;
   const colCount = visibleDays.length;
 
   const weekLabel = `${format(days[0], "d MMM", { locale: pt })} — ${format(days[6], "d MMM yyyy", { locale: pt })}`;
+
+  const selectedLabel = isMobile
+    ? selectedDayIndices.map((i) => format(days[i], "EEE d", { locale: pt })).join(", ")
+    : "";
 
   const getAptsForDay = (day: Date) => {
     if (isSameDay(day, today)) return appointments.filter(a => a.status !== "cancelled" && a.status !== "no_show");
@@ -62,9 +88,6 @@ export default function WeeklyView({ appointments, weekOffset, onWeekChange }: W
     if (dow === 0 || dow === 6) return [];
     return appointments.filter(a => a.status === "confirmed").slice(0, 2);
   };
-
-  const canPrev = mobileStartIdx > 0;
-  const canNext = mobileStartIdx + 2 < 7;
 
   return (
     <div className="space-y-4">
@@ -86,101 +109,77 @@ export default function WeeklyView({ appointments, weekOffset, onWeekChange }: W
         </Button>
       </div>
 
-      {/* Mobile day navigation */}
+      {/* Mobile day selector — Combobox */}
       {isMobile && (
-        <div className="flex items-center justify-between gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2"
-            disabled={!canPrev}
-            onClick={() => setMobileStartIdx((i) => Math.max(0, i - 2))}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-
-          <div className="flex gap-1 overflow-hidden flex-1 justify-center">
-            {days.map((day, idx) => {
-              const isVisible = idx >= mobileStartIdx && idx < mobileStartIdx + 2;
-              return (
-                <button
-                  key={day.toISOString()}
-                  onClick={() => setMobileStartIdx(Math.min(idx, 5))}
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors min-w-[38px] ${
-                    isVisible
-                      ? isToday(day) ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                      : isToday(day) ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  <span className="capitalize">{format(day, "EEEEE", { locale: pt })}</span>
-                  <span className="block text-[10px]">{format(day, "d")}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2"
-            disabled={!canNext}
-            onClick={() => setMobileStartIdx((i) => Math.min(5, i + 2))}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
+        <Popover open={comboOpen} onOpenChange={setComboOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-between h-10 text-sm capitalize">
+              <span className="flex items-center gap-2 truncate">
+                <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="truncate">{selectedLabel}</span>
+              </span>
+              <ChevronsUpDown className="w-4 h-4 text-muted-foreground shrink-0" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Filtrar dias..." />
+              <CommandList>
+                <CommandEmpty>Sem resultados</CommandEmpty>
+                <CommandGroup>
+                  {days.map((day, idx) => {
+                    const isSelected = selectedDayIndices.includes(idx);
+                    const todayMark = isToday(day);
+                    const label = format(day, "EEEE, d 'de' MMMM", { locale: pt });
+                    return (
+                      <CommandItem
+                        key={idx}
+                        value={label}
+                        onSelect={() => toggleDay(idx)}
+                        className="capitalize"
+                      >
+                        <Check className={cn("w-4 h-4 mr-2 shrink-0", isSelected ? "opacity-100" : "opacity-0")} />
+                        <span className={cn("flex-1", todayMark && "font-semibold text-primary")}>
+                          {label}
+                          {todayMark && <span className="ml-1.5 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">hoje</span>}
+                        </span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       )}
 
       {/* Grid */}
-      <div ref={gridRef} className={isMobile ? "" : "overflow-x-auto -mx-4 px-4"}>
+      <div className={isMobile ? "" : "overflow-x-auto -mx-4 px-4"}>
         <div className={isMobile ? "" : "min-w-[700px]"}>
-          {/* Day headers (desktop only — mobile has the pill nav above) */}
-          {!isMobile && (
-            <div className="grid grid-cols-[60px_repeat(7,1fr)] gap-px mb-1">
-              <div />
-              {days.map((day) => {
-                const today_ = isToday(day);
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className={`text-center py-2 rounded-t-lg text-xs font-medium ${
-                      today_ ? "bg-primary/10 text-primary" : "text-muted-foreground"
-                    }`}
-                  >
-                    <span className="capitalize">{format(day, "EEE", { locale: pt })}</span>
-                    <br />
-                    <span className={`text-sm font-bold ${today_ ? "text-primary" : "text-foreground"}`}>
-                      {format(day, "d")}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Mobile day headers */}
-          {isMobile && (
-            <div className={`grid grid-cols-[48px_repeat(${colCount},1fr)] gap-px mb-1`} style={{ gridTemplateColumns: `48px repeat(${colCount}, 1fr)` }}>
-              <div />
-              {visibleDays.map((day) => {
-                const today_ = isToday(day);
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className={`text-center py-2 rounded-t-lg text-xs font-medium ${
-                      today_ ? "bg-primary/10 text-primary" : "text-muted-foreground"
-                    }`}
-                  >
-                    <span className="capitalize">{format(day, "EEE", { locale: pt })}</span>
-                    <br />
-                    <span className={`text-sm font-bold ${today_ ? "text-primary" : "text-foreground"}`}>
-                      {format(day, "d")}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {/* Day headers */}
+          <div
+            className="gap-px mb-1 grid"
+            style={{ gridTemplateColumns: `${isMobile ? 48 : 60}px repeat(${colCount}, 1fr)` }}
+          >
+            <div />
+            {visibleDays.map((day) => {
+              const today_ = isToday(day);
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={`text-center py-2 rounded-t-lg text-xs font-medium ${
+                    today_ ? "bg-primary/10 text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  <span className="capitalize">{format(day, "EEE", { locale: pt })}</span>
+                  <br />
+                  <span className={`text-sm font-bold ${today_ ? "text-primary" : "text-foreground"}`}>
+                    {format(day, "d")}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
 
           {/* Time grid */}
           <div
