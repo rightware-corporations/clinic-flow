@@ -411,7 +411,7 @@ export default function BookingPage() {
             </AnimatePresence>
 
             {/* Navigation — sticky on mobile */}
-            <div className="fixed bottom-0 inset-x-0 z-40 bg-background border-t p-3 flex items-center justify-between md:static md:z-auto md:bg-transparent md:border-t md:p-0 md:mt-8 md:pt-6">
+            <div className="fixed bottom-16 inset-x-0 z-40 bg-background border-t p-3 flex items-center justify-between md:static md:bottom-auto md:z-auto md:bg-transparent md:border-t md:p-0 md:mt-8 md:pt-6">
               <Button
                 variant="outline"
                 onClick={handleBack}
