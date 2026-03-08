@@ -306,6 +306,11 @@ export default function BookingPage() {
                     <p className="text-sm text-muted-foreground mb-5">
                       Horários disponíveis para {selectedDate && formatDate(selectedDate)}.
                     </p>
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded border-2 border-primary/30 bg-primary/5" /> Disponível</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded border-2 border-primary bg-primary" /> Selecionado</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded border-2 border-border bg-muted opacity-50" /> Ocupado</span>
+                    </div>
                     {slots.filter((s) => s.status === "available").length === 0 ? (
                       <div className="text-center py-12">
                         <Clock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
@@ -314,7 +319,7 @@ export default function BookingPage() {
                         <Button variant="outline" onClick={() => setStep(2)}>Escolher outra data</Button>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 pb-20 md:pb-0">
                         {slots.map((slot) => {
                           const isSelected = selectedSlot?.id === slot.id;
                           const cls = isSelected ? "slot-selected" : slot.status === "available" ? "slot-available" : slot.status === "occupied" ? "slot-occupied" : "slot-unavailable";
@@ -331,11 +336,6 @@ export default function BookingPage() {
                         })}
                       </div>
                     )}
-                    <div className="flex items-center gap-4 mt-6 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded border-2 border-primary/30 bg-primary/5" /> Disponível</span>
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded border-2 border-primary bg-primary" /> Selecionado</span>
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded border-2 border-border bg-muted opacity-50" /> Ocupado</span>
-                    </div>
                   </div>
                 )}
 
