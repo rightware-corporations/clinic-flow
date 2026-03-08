@@ -225,5 +225,3 @@ export default function WeeklyView({ appointments, weekOffset, onWeekChange }: W
     </div>
   );
 }
-
-import React from "react";
