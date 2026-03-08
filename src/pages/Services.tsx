@@ -111,26 +111,6 @@ export default function ServicesPage() {
           )}
         </div>
 
-        {/* Category Filters */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          <Badge
-            variant={!activeCategory ? "default" : "outline"}
-            className={`cursor-pointer transition-colors ${!activeCategory ? "medical-gradient border-0 text-primary-foreground" : ""}`}
-            onClick={() => { setSearchParams({}); setSelectedServiceId(null); }}
-          >
-            Todos
-          </Badge>
-          {allCategories.map((cat) => (
-            <Badge
-              key={cat}
-              variant={activeCategory === cat ? "default" : "outline"}
-              className={`cursor-pointer transition-colors ${activeCategory === cat ? "medical-gradient border-0 text-primary-foreground" : ""}`}
-              onClick={() => { setSearchParams({ cat }); setSelectedServiceId(null); }}
-            >
-              {categoryLabels[cat]}
-            </Badge>
-          ))}
-        </div>
 
         {/* Results */}
         {filtered.length === 0 ? (
