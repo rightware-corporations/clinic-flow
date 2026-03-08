@@ -12,8 +12,6 @@ import { cn } from "@/lib/utils";
 
 const allCategories = Object.keys(categoryLabels) as ServiceCategory[];
 
-const allCategories = Object.keys(categoryLabels) as ServiceCategory[];
-
 // Build combobox options from all services
 const serviceOptions = services.map((s) => ({
   value: s.id,
