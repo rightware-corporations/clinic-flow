@@ -30,9 +30,18 @@ export default function LoginPage() {
       </div>
 
       {/* Right form */}
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8">
+          {/* Logo — visible on mobile */}
+          <div className="flex flex-col items-center mb-8 lg:hidden">
+            <div className="w-14 h-14 rounded-2xl medical-gradient flex items-center justify-center mb-3">
+              <Stethoscope className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <h1 className="text-xl font-bold">MedClínica</h1>
+            <p className="text-xs text-muted-foreground">Premium Healthcare</p>
+          </div>
+
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
             ← Voltar ao início
           </Link>
 
