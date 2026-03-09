@@ -20,7 +20,7 @@ import {
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; id?: string; email?: string; role: string } | null>(null);
   const [name, setName] = useState("");
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
