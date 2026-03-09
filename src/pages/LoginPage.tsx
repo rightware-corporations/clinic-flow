@@ -38,6 +38,12 @@ function validateId(id: string): boolean {
   return /^[AaMmCc]\d{3,}$/.test(id);
 }
 
+function generateId(role: "paciente" | "profissional" | "admin"): string {
+  const prefix = role === "admin" ? "A" : role === "profissional" ? "M" : "C";
+  const randomNum = Math.floor(Math.random() * 9000) + 1000; // 1000-9999
+  return `${prefix}${randomNum}`;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [loginId, setLoginId] = useState("");
