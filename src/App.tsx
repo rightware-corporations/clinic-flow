@@ -16,6 +16,8 @@ import PractitionerDashboard from "./pages/PractitionerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuperDashboard from "./pages/SuperDashboard";
 import CategoryPage from "./pages/CategoryPage";
+import ProfilePage from "./pages/ProfilePage";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -30,11 +32,14 @@ function AnimatedRoutes() {
         <Route path="/servicos/:slug" element={<PageTransition><ServiceDetailPage /></PageTransition>} />
         <Route path="/categoria/:slug" element={<PageTransition><CategoryPage /></PageTransition>} />
         <Route path="/agendar" element={<PageTransition><BookingPage /></PageTransition>} />
-          <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
-        <Route path="/paciente" element={<PageTransition><PatientDashboard /></PageTransition>} />
-        <Route path="/profissional" element={<PageTransition><PractitionerDashboard /></PageTransition>} />
-        <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
-        <Route path="/super" element={<PageTransition><SuperDashboard /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        
+        <Route path="/perfil" element={<ProtectedRoute><PageTransition><ProfilePage /></PageTransition></ProtectedRoute>} />
+        <Route path="/paciente" element={<ProtectedRoute allowedRoles={["paciente"]}><PageTransition><PatientDashboard /></PageTransition></ProtectedRoute>} />
+        <Route path="/profissional" element={<ProtectedRoute allowedRoles={["profissional"]}><PageTransition><PractitionerDashboard /></PageTransition></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><PageTransition><AdminDashboard /></PageTransition></ProtectedRoute>} />
+        <Route path="/super" element={<ProtectedRoute allowedRoles={["admin"]}><PageTransition><SuperDashboard /></PageTransition></ProtectedRoute>} />
+        
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
