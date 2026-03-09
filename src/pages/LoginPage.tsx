@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 // Determinar role baseado no prefixo do ID
@@ -37,12 +38,18 @@ function validateId(id: string): boolean {
   return /^[AaMmCc]\d{3,}$/.test(id);
 }
 
+function generateId(role: "paciente" | "profissional" | "admin"): string {
+  const prefix = role === "admin" ? "A" : role === "profissional" ? "M" : "C";
+  const randomNum = Math.floor(Math.random() * 9000) + 1000; // 1000-9999
+  return `${prefix}${randomNum}`;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [loginId, setLoginId] = useState("");
   const [loginPass, setLoginPass] = useState("");
   const [regName, setRegName] = useState("");
-  const [regId, setRegId] = useState("");
+  const [regAccountType, setRegAccountType] = useState<"paciente" | "profissional" | "admin">("paciente");
   const [regPass, setRegPass] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -81,18 +88,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     setTimeout(() => {
-      const id = regId.toUpperCase();
-      if (!validateId(id)) {
-        toast.error("ID inválido. Use o formato: M001, C001 ou A001");
-        setIsLoading(false);
-        return;
-      }
-      const role = determineRole(id);
-      if (!role) {
-        toast.error("Prefixo de ID não reconhecido");
-        setIsLoading(false);
-        return;
-      }
+      const id = generateId(regAccountType);
+      const role = regAccountType;
 
       localStorage.setItem("user", JSON.stringify({
         id,
@@ -100,7 +97,7 @@ export default function LoginPage() {
         name: regName || id,
       }));
       window.dispatchEvent(new Event("auth-change"));
-      toast.success(`Conta criada! Acesso como ${getRoleLabel(role)}`);
+      toast.success(`Conta criada! O seu ID é: ${id}`, { duration: 6000 });
       navigate(getRoleRedirect(role));
       setIsLoading(false);
     }, 600);
@@ -237,21 +234,19 @@ export default function LoginPage() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="reg-id">ID de Utilizador</Label>
-                  <div className="relative">
-                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="reg-id"
-                      placeholder="Ex: M001, C001, A001"
-                      className="pl-10 h-11 uppercase font-mono"
-                      value={regId}
-                      onChange={(e) => setRegId(e.target.value.toUpperCase())}
-                      maxLength={10}
-                      required
-                    />
-                  </div>
+                  <Label htmlFor="reg-type">Tipo de Conta</Label>
+                  <Select value={regAccountType} onValueChange={(v) => setRegAccountType(v as any)}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="paciente">Cliente / Paciente</SelectItem>
+                      <SelectItem value="profissional">Médico / Profissional</SelectItem>
+                      <SelectItem value="admin">Administrador</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    M = Médico · C = Cliente · A = Admin
+                    O seu ID será gerado automaticamente
                   </p>
                 </div>
                 <div className="space-y-1.5">
