@@ -389,11 +389,40 @@ export default function Navbar() {
             <Phone className="w-4 h-4" />
             <span>210 000 000</span>
           </a>
-          <Link to="/login">
-            <Button variant="outline" size="sm">
-              Área Pessoal
-            </Button>
-          </Link>
+          
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <User className="w-4 h-4" />
+                  <span className="max-w-[100px] truncate">{user.name.split(" ")[0]}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to={getDashboardLink()} className="cursor-pointer flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/perfil" className="cursor-pointer flex items-center gap-2">
+                    <Settings className="w-4 h-4" /> Perfil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setLogoutOpen(true)} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive flex items-center gap-2">
+                  <LogOut className="w-4 h-4" /> Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/login">
+              <Button variant="outline" size="sm">
+                Área Pessoal
+              </Button>
+            </Link>
+          )}
+
           <Link to="/agendar">
             <Button size="sm" className="medical-gradient border-0 shadow-primary-glow">
               Agendar
