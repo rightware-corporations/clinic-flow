@@ -474,7 +474,17 @@ export default function Navbar() {
 
               <Link to="/sobre" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Sobre</Link>
               <Link to="/contacto" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Contacto</Link>
-              <Link to="/login" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Área Pessoal</Link>
+              
+              {user ? (
+                <>
+                  <Link to={getDashboardLink()} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Dashboard</Link>
+                  <Link to="/perfil" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Meu Perfil</Link>
+                  <button onClick={() => { setMobileOpen(false); setLogoutOpen(true); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10">Terminar Sessão</button>
+                </>
+              ) : (
+                <Link to="/login" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Área Pessoal</Link>
+              )}
+
               <div className="pt-2">
                 <Link to="/agendar" onClick={() => setMobileOpen(false)}>
                   <Button className="w-full medical-gradient border-0">Agendar Consulta</Button>
