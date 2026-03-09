@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/layout/Layout";
+import { Link } from "react-router-dom";
 
 const mockAppointments = [
   { id: "a1", service: "Consulta de Medicina Geral", practitioner: "Dra. Ana Mendes", date: "2026-03-15", time: "09:30", unit: "Unidade Central", status: "upcoming" as const },
