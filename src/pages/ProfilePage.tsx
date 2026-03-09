@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Mail, Save, LogOut, ArrowLeft, Shield } from "lucide-react";
+import { User, Save, LogOut, ArrowLeft, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ import {
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; id?: string; email?: string; role: string } | null>(null);
   const [name, setName] = useState("");
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -103,7 +103,7 @@ export default function ProfilePage() {
                   <Shield className="w-3 h-3" />
                   {getRoleLabel(user.role)}
                 </span>
-                <span className="text-sm text-muted-foreground">{user.email}</span>
+                <span className="text-sm text-muted-foreground font-mono">{user.id || user.email || "—"}</span>
               </div>
             </div>
           </div>
@@ -124,17 +124,17 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="user-id">ID de Utilizador</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
-                    id="email" 
-                    value={user.email} 
+                    id="user-id" 
+                    value={user.id || "—"} 
                     disabled 
-                    className="pl-10 bg-muted/50 text-muted-foreground cursor-not-allowed" 
+                    className="pl-10 bg-muted/50 text-muted-foreground cursor-not-allowed font-mono uppercase" 
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground">O email não pode ser alterado.</p>
+                <p className="text-[10px] text-muted-foreground">O ID não pode ser alterado.</p>
               </div>
             </div>
 
