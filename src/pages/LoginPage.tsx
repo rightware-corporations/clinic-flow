@@ -234,21 +234,19 @@ export default function LoginPage() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="reg-id">ID de Utilizador</Label>
-                  <div className="relative">
-                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="reg-id"
-                      placeholder="Ex: M001, C001, A001"
-                      className="pl-10 h-11 uppercase font-mono"
-                      value={regId}
-                      onChange={(e) => setRegId(e.target.value.toUpperCase())}
-                      maxLength={10}
-                      required
-                    />
-                  </div>
+                  <Label htmlFor="reg-type">Tipo de Conta</Label>
+                  <Select value={regAccountType} onValueChange={(v) => setRegAccountType(v as any)}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="paciente">Cliente / Paciente</SelectItem>
+                      <SelectItem value="profissional">Médico / Profissional</SelectItem>
+                      <SelectItem value="admin">Administrador</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    M = Médico · C = Cliente · A = Admin
+                    O seu ID será gerado automaticamente
                   </p>
                 </div>
                 <div className="space-y-1.5">
