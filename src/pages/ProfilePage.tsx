@@ -103,7 +103,7 @@ export default function ProfilePage() {
                   <Shield className="w-3 h-3" />
                   {getRoleLabel(user.role)}
                 </span>
-                <span className="text-sm text-muted-foreground">{user.email}</span>
+                <span className="text-sm text-muted-foreground font-mono">{user.id || user.email || "—"}</span>
               </div>
             </div>
           </div>
