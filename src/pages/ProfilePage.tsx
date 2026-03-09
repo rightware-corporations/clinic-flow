@@ -124,17 +124,17 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="user-id">ID de Utilizador</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
-                    id="email" 
-                    value={user.email} 
+                    id="user-id" 
+                    value={user.id || "—"} 
                     disabled 
-                    className="pl-10 bg-muted/50 text-muted-foreground cursor-not-allowed" 
+                    className="pl-10 bg-muted/50 text-muted-foreground cursor-not-allowed font-mono uppercase" 
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground">O email não pode ser alterado.</p>
+                <p className="text-[10px] text-muted-foreground">O ID não pode ser alterado.</p>
               </div>
             </div>
 
