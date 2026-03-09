@@ -88,18 +88,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     setTimeout(() => {
-      const id = regId.toUpperCase();
-      if (!validateId(id)) {
-        toast.error("ID inválido. Use o formato: M001, C001 ou A001");
-        setIsLoading(false);
-        return;
-      }
-      const role = determineRole(id);
-      if (!role) {
-        toast.error("Prefixo de ID não reconhecido");
-        setIsLoading(false);
-        return;
-      }
+      const id = generateId(regAccountType);
+      const role = regAccountType;
 
       localStorage.setItem("user", JSON.stringify({
         id,
@@ -107,7 +97,7 @@ export default function LoginPage() {
         name: regName || id,
       }));
       window.dispatchEvent(new Event("auth-change"));
-      toast.success(`Conta criada! Acesso como ${getRoleLabel(role)}`);
+      toast.success(`Conta criada! O seu ID é: ${id}`, { duration: 6000 });
       navigate(getRoleRedirect(role));
       setIsLoading(false);
     }, 600);
