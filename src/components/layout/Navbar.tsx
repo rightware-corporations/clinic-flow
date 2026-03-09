@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Stethoscope,
@@ -19,9 +19,31 @@ import {
   ChevronDown,
   ChevronRight,
   ArrowRight,
+  User,
+  LogOut,
+  Settings,
+  LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface MegaCategory {
   label: string;
@@ -162,8 +184,38 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<number>(0);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [user, setUser] = useState<{name: string; role: string} | null>(null);
   const closeTimeout = useRef<ReturnType<typeof setTimeout>>();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUser = () => {
+      const userStr = localStorage.getItem("user");
+      setUser(userStr ? JSON.parse(userStr) : null);
+    };
+    checkUser();
+    window.addEventListener("storage", checkUser);
+    window.addEventListener("auth-change", checkUser);
+    return () => {
+      window.removeEventListener("storage", checkUser);
+      window.removeEventListener("auth-change", checkUser);
+    };
+  }, [location.pathname]);
+
+  const getDashboardLink = () => {
+    if (!user) return "/login";
+    return user.role === "admin" ? "/admin" : user.role === "profissional" ? "/profissional" : "/paciente";
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    window.dispatchEvent(new Event("auth-change"));
+    toast.success("Sessão terminada com sucesso");
+    navigate("/");
+    setLogoutOpen(false);
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -337,11 +389,40 @@ export default function Navbar() {
             <Phone className="w-4 h-4" />
             <span>210 000 000</span>
           </a>
-          <Link to="/login">
-            <Button variant="outline" size="sm">
-              Área Pessoal
-            </Button>
-          </Link>
+          
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <User className="w-4 h-4" />
+                  <span className="max-w-[100px] truncate">{user.name.split(" ")[0]}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to={getDashboardLink()} className="cursor-pointer flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/perfil" className="cursor-pointer flex items-center gap-2">
+                    <Settings className="w-4 h-4" /> Perfil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setLogoutOpen(true)} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive flex items-center gap-2">
+                  <LogOut className="w-4 h-4" /> Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/login">
+              <Button variant="outline" size="sm">
+                Área Pessoal
+              </Button>
+            </Link>
+          )}
+
           <Link to="/agendar">
             <Button size="sm" className="medical-gradient border-0 shadow-primary-glow">
               Agendar
@@ -393,7 +474,17 @@ export default function Navbar() {
 
               <Link to="/sobre" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Sobre</Link>
               <Link to="/contacto" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Contacto</Link>
-              <Link to="/login" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Área Pessoal</Link>
+              
+              {user ? (
+                <>
+                  <Link to={getDashboardLink()} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Dashboard</Link>
+                  <Link to="/perfil" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Meu Perfil</Link>
+                  <button onClick={() => { setMobileOpen(false); setLogoutOpen(true); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10">Terminar Sessão</button>
+                </>
+              ) : (
+                <Link to="/login" className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted/50" onClick={() => setMobileOpen(false)}>Área Pessoal</Link>
+              )}
+
               <div className="pt-2">
                 <Link to="/agendar" onClick={() => setMobileOpen(false)}>
                   <Button className="w-full medical-gradient border-0">Agendar Consulta</Button>
@@ -403,6 +494,23 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terminar sessão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem a certeza que pretende sair da sua conta? Terá de fazer login novamente para aceder ao sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 }

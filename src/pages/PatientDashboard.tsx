@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/layout/Layout";
+import { Link } from "react-router-dom";
 
 const mockAppointments = [
   { id: "a1", service: "Consulta de Medicina Geral", practitioner: "Dra. Ana Mendes", date: "2026-03-15", time: "09:30", unit: "Unidade Central", status: "upcoming" as const },
@@ -23,17 +24,21 @@ export default function PatientDashboard() {
   const upcoming = mockAppointments.filter((a) => a.status === "upcoming");
   const past = mockAppointments.filter((a) => a.status !== "upcoming");
 
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : { name: "João Silva" };
+
   return (
     <Layout>
       <div className="container py-8 md:py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Área do Paciente</h1>
-            <p className="text-muted-foreground text-sm">Bem-vindo, João Silva</p>
+            <p className="text-muted-foreground text-sm">Bem-vindo, {user.name}</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="gap-1"><Settings className="w-4 h-4" /> Perfil</Button>
-            <Button variant="outline" size="sm" className="gap-1 text-destructive"><LogOut className="w-4 h-4" /> Sair</Button>
+            <Link to="/perfil">
+              <Button variant="outline" size="sm" className="gap-1"><Settings className="w-4 h-4" /> Perfil</Button>
+            </Link>
           </div>
         </div>
 
