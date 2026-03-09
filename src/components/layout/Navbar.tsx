@@ -184,8 +184,38 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<number>(0);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [user, setUser] = useState<{name: string; role: string} | null>(null);
   const closeTimeout = useRef<ReturnType<typeof setTimeout>>();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUser = () => {
+      const userStr = localStorage.getItem("user");
+      setUser(userStr ? JSON.parse(userStr) : null);
+    };
+    checkUser();
+    window.addEventListener("storage", checkUser);
+    window.addEventListener("auth-change", checkUser);
+    return () => {
+      window.removeEventListener("storage", checkUser);
+      window.removeEventListener("auth-change", checkUser);
+    };
+  }, [location.pathname]);
+
+  const getDashboardLink = () => {
+    if (!user) return "/login";
+    return user.role === "admin" ? "/admin" : user.role === "profissional" ? "/profissional" : "/paciente";
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    window.dispatchEvent(new Event("auth-change"));
+    toast.success("Sessão terminada com sucesso");
+    navigate("/");
+    setLogoutOpen(false);
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
