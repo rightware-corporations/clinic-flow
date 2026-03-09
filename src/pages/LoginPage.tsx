@@ -49,7 +49,7 @@ export default function LoginPage() {
   const [loginId, setLoginId] = useState("");
   const [loginPass, setLoginPass] = useState("");
   const [regName, setRegName] = useState("");
-  const [regId, setRegId] = useState("");
+  const [regAccountType, setRegAccountType] = useState<"paciente" | "profissional" | "admin">("paciente");
   const [regPass, setRegPass] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
