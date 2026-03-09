@@ -30,8 +30,7 @@ function AnimatedRoutes() {
         <Route path="/servicos/:slug" element={<PageTransition><ServiceDetailPage /></PageTransition>} />
         <Route path="/categoria/:slug" element={<PageTransition><CategoryPage /></PageTransition>} />
         <Route path="/agendar" element={<PageTransition><BookingPage /></PageTransition>} />
-        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
-        <Route path="/login/:role" element={<PageTransition><LoginPage /></PageTransition>} />
+          <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
         <Route path="/paciente" element={<PageTransition><PatientDashboard /></PageTransition>} />
         <Route path="/profissional" element={<PageTransition><PractitionerDashboard /></PageTransition>} />
         <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
