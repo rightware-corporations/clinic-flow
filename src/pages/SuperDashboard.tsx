@@ -20,7 +20,7 @@ const units = [
 export default function SuperDashboard() {
   return (
     <DashboardLayout>
-      <div className="container py-8 md:py-12">
+      <div className="p-6 md:p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Painel Super Admin</h1>
