@@ -150,8 +150,8 @@ export default function PractitionerDashboard() {
   const dialogApt = dialogState.aptId ? agenda.find((a) => a.id === dialogState.aptId) : null;
 
   return (
-    <Layout>
-      <div className="container py-8 md:py-12">
+    <DashboardLayout>
+      <div className="p-6 md:p-8">
         {/* Header with quick actions */}
         <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
           <div>
