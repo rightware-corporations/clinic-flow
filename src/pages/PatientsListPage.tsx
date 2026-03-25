@@ -8,7 +8,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import Layout from "@/components/layout/Layout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -32,8 +32,8 @@ export default function PatientsListPage() {
   }, [patients, search]);
 
   return (
-    <Layout>
-      <div className="container py-8 md:py-12 space-y-6">
+    <DashboardLayout>
+      <div className="p-6 md:p-8 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Pacientes</h1>
@@ -128,6 +128,6 @@ export default function PatientsListPage() {
           </div>
         )}
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }

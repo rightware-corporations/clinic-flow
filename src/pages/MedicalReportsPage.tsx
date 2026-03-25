@@ -8,7 +8,7 @@
 
 import { useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import Layout from "@/components/layout/Layout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import ReportList from "@/components/reports/ReportList";
 import ReportForm from "@/components/reports/ReportForm";
 import ReportView from "@/components/reports/ReportView";
@@ -94,8 +94,8 @@ export default function MedicalReportsPage() {
   }, []);
 
   return (
-    <Layout>
-      <div className="container py-8 md:py-12" key={refreshKey}>
+    <DashboardLayout>
+      <div className="p-6 md:p-8" key={refreshKey}>
         {viewMode === "list" && (
           <ReportList
             reports={reports}
@@ -132,6 +132,6 @@ export default function MedicalReportsPage() {
           />
         )}
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }

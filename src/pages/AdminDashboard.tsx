@@ -1,8 +1,12 @@
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, CalendarDays, Stethoscope, Building2, TrendingUp, Clock, BarChart3, Settings } from "lucide-react";
+import { Users, CalendarDays, Stethoscope, Building2, TrendingUp, Clock, BarChart3, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Layout from "@/components/layout/Layout";
+import { Badge } from "@/components/ui/badge";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { getReports, getPatients } from "@/data/medical-reports-store";
+import { reportTypeLabels, reportStatusLabels } from "@/types/medical-reports";
 
 const stats = [
   { label: "Marcações Hoje", value: "24", icon: CalendarDays, change: "+3" },
@@ -20,27 +24,24 @@ const recentAppointments = [
 ];
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const reports = getReports();
+  const patients = getPatients();
+
   return (
-    <Layout>
-      <div className="container py-8 md:py-12">
+    <DashboardLayout>
+      <div className="p-6 md:p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Painel de Administração</h1>
             <p className="text-muted-foreground text-sm">Visão geral da clínica</p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1"><Settings className="w-4 h-4" /> Configurações</Button>
         </div>
 
         {/* Stats */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-              className="medical-card p-5"
-            >
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="medical-card p-5">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <stat.icon className="w-5 h-5 text-primary" />
@@ -60,9 +61,8 @@ export default function AdminDashboard() {
         <Tabs defaultValue="appointments" className="space-y-6">
           <TabsList>
             <TabsTrigger value="appointments">Marcações</TabsTrigger>
-            <TabsTrigger value="services">Serviços</TabsTrigger>
-            <TabsTrigger value="practitioners">Profissionais</TabsTrigger>
-            <TabsTrigger value="reports">Relatórios</TabsTrigger>
+            <TabsTrigger value="reports">Relatórios ({reports.length})</TabsTrigger>
+            <TabsTrigger value="patients">Pacientes ({patients.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="appointments">
@@ -83,14 +83,8 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> {apt.time}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                        apt.status === "confirmed" ? "bg-success/10 text-success" :
-                        apt.status === "pending" ? "bg-warning/10 text-warning" :
-                        "bg-primary/10 text-primary"
-                      }`}>
+                      <span className="text-sm text-muted-foreground flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {apt.time}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${apt.status === "confirmed" ? "bg-success/10 text-success" : apt.status === "pending" ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary"}`}>
                         {apt.status === "confirmed" ? "Confirmada" : apt.status === "pending" ? "Pendente" : "Realizada"}
                       </span>
                     </div>
@@ -100,31 +94,55 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
-          <TabsContent value="services">
-            <div className="text-center py-16">
-              <Stethoscope className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="font-semibold mb-1">Gestão de Serviços</h3>
-              <p className="text-sm text-muted-foreground">Painel completo de gestão disponível em breve.</p>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="practitioners">
-            <div className="text-center py-16">
-              <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="font-semibold mb-1">Gestão de Profissionais</h3>
-              <p className="text-sm text-muted-foreground">Painel completo de gestão disponível em breve.</p>
-            </div>
-          </TabsContent>
-
           <TabsContent value="reports">
-            <div className="text-center py-16">
-              <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="font-semibold mb-1">Relatórios</h3>
-              <p className="text-sm text-muted-foreground">Painel de relatórios disponível em breve.</p>
+            <div className="space-y-3">
+              {reports.slice(0, 5).map((report, i) => (
+                <motion.div key={report.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                  className="medical-card p-4 cursor-pointer hover:border-primary/20 transition-colors"
+                  onClick={() => navigate("/relatorios")}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-xs text-muted-foreground">{report.id}</span>
+                        <Badge variant={report.status === "draft" ? "outline" : "default"} className={report.status === "finalized" ? "bg-accent text-accent-foreground text-xs" : "text-xs"}>
+                          {reportStatusLabels[report.status]}
+                        </Badge>
+                      </div>
+                      <p className="text-sm font-medium">{report.patientName} — {reportTypeLabels[report.type]}</p>
+                      <p className="text-xs text-muted-foreground">{report.doctorName} · {new Date(report.createdAt).toLocaleDateString("pt-PT")}</p>
+                    </div>
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                </motion.div>
+              ))}
+              <Button variant="outline" className="w-full" onClick={() => navigate("/relatorios")}>Ver todos os relatórios</Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="patients">
+            <div className="space-y-3">
+              {patients.slice(0, 5).map((p, i) => (
+                <motion.div key={p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                  className="medical-card p-4 cursor-pointer hover:border-primary/20 transition-colors"
+                  onClick={() => navigate(`/pacientes/${p.id}`)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.id} · {p.phone} · SNS: {p.sns}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+              <Button variant="outline" className="w-full" onClick={() => navigate("/pacientes")}>Ver todos os pacientes</Button>
             </div>
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }

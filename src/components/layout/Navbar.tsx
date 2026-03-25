@@ -206,7 +206,8 @@ export default function Navbar() {
 
   const getDashboardLink = () => {
     if (!user) return "/login";
-    return user.role === "admin" ? "/admin" : user.role === "profissional" ? "/profissional" : "/paciente";
+    const routes: Record<string, string> = { admin: "/admin", profissional: "/profissional", staff: "/staff", interno: "/interno", paciente: "/paciente" };
+    return routes[user.role] || "/paciente";
   };
 
   const handleLogout = () => {

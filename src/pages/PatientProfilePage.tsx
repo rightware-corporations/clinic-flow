@@ -10,7 +10,7 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import Layout from "@/components/layout/Layout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import ReportView from "@/components/reports/ReportView";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,31 +55,31 @@ export default function PatientProfilePage() {
 
   if (!patient) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="container py-12 text-center">
           <User className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
           <h2 className="text-xl font-bold text-foreground mb-2">Paciente não encontrado</h2>
           <Button variant="outline" onClick={() => navigate(-1)}>Voltar</Button>
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   if (viewingReport) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="container py-8 md:py-12">
           <ReportView
             report={viewingReport}
             onBack={() => setViewingReport(null)}
           />
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <Layout>
+    <DashboardLayout>
       <div className="container py-8 md:py-12 space-y-6">
         {/* Back button */}
         <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
@@ -224,6 +224,6 @@ export default function PatientProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }

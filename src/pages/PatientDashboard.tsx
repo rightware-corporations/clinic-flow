@@ -1,11 +1,10 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { CalendarDays, Clock, MapPin, FileText, X, RefreshCw, User, Settings, LogOut } from "lucide-react";
+import { CalendarDays, Clock, MapPin, FileText, X, RefreshCw, User, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Layout from "@/components/layout/Layout";
 import { Link } from "react-router-dom";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const mockAppointments = [
   { id: "a1", service: "Consulta de Medicina Geral", practitioner: "Dra. Ana Mendes", date: "2026-03-15", time: "09:30", unit: "Unidade Central", status: "upcoming" as const },
@@ -23,23 +22,20 @@ const statusLabels = {
 export default function PatientDashboard() {
   const upcoming = mockAppointments.filter((a) => a.status === "upcoming");
   const past = mockAppointments.filter((a) => a.status !== "upcoming");
-
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : { name: "João Silva" };
 
   return (
-    <Layout>
-      <div className="container py-8 md:py-12">
+    <DashboardLayout>
+      <div className="p-6 md:p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Área do Paciente</h1>
             <p className="text-muted-foreground text-sm">Bem-vindo, {user.name}</p>
           </div>
-          <div className="flex gap-2">
-            <Link to="/perfil">
-              <Button variant="outline" size="sm" className="gap-1"><Settings className="w-4 h-4" /> Perfil</Button>
-            </Link>
-          </div>
+          <Link to="/agendar">
+            <Button className="gap-2"><Calendar className="w-4 h-4" /> Nova Marcação</Button>
+          </Link>
         </div>
 
         <Tabs defaultValue="upcoming" className="space-y-6">
@@ -58,13 +54,7 @@ export default function PatientDashboard() {
             ) : (
               <div className="space-y-3">
                 {upcoming.map((apt, i) => (
-                  <motion.div
-                    key={apt.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="medical-card p-5"
-                  >
+                  <motion.div key={apt.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="medical-card p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -92,20 +82,12 @@ export default function PatientDashboard() {
           <TabsContent value="history">
             <div className="space-y-3">
               {past.map((apt, i) => (
-                <motion.div
-                  key={apt.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="medical-card p-5 opacity-80"
-                >
+                <motion.div key={apt.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="medical-card p-5 opacity-80">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-sm">{apt.service}</h3>
-                        <Badge variant={statusLabels[apt.status].variant}>
-                          {statusLabels[apt.status].label}
-                        </Badge>
+                        <Badge variant={statusLabels[apt.status].variant}>{statusLabels[apt.status].label}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">{apt.date} · {apt.time} · {apt.practitioner}</p>
                     </div>
@@ -117,6 +99,6 @@ export default function PatientDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }
