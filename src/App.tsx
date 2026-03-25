@@ -17,6 +17,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import SuperDashboard from "./pages/SuperDashboard";
 import CategoryPage from "./pages/CategoryPage";
 import ProfilePage from "./pages/ProfilePage";
+import MedicalReportsPage from "./pages/MedicalReportsPage";
+import PatientProfilePage from "./pages/PatientProfilePage";
+import PatientsListPage from "./pages/PatientsListPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -39,6 +42,13 @@ function AnimatedRoutes() {
         <Route path="/profissional" element={<ProtectedRoute allowedRoles={["profissional"]}><PageTransition><PractitionerDashboard /></PageTransition></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><PageTransition><AdminDashboard /></PageTransition></ProtectedRoute>} />
         <Route path="/super" element={<ProtectedRoute allowedRoles={["admin"]}><PageTransition><SuperDashboard /></PageTransition></ProtectedRoute>} />
+        
+        {/* Medical reports system — accessible to doctors and admins */}
+        <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["profissional", "admin"]}><PageTransition><MedicalReportsPage /></PageTransition></ProtectedRoute>} />
+        
+        {/* Patient management — accessible to doctors and admins */}
+        <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["profissional", "admin"]}><PageTransition><PatientsListPage /></PageTransition></ProtectedRoute>} />
+        <Route path="/pacientes/:id" element={<ProtectedRoute allowedRoles={["profissional", "admin"]}><PageTransition><PatientProfilePage /></PageTransition></ProtectedRoute>} />
         
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>

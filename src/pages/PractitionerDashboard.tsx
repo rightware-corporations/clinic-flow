@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CalendarDays, Clock, Play, X, Check, UserX, AlertTriangle } from "lucide-react";
+import { CalendarDays, Clock, Play, X, Check, UserX, AlertTriangle, FileText, Users, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -17,6 +18,11 @@ import Layout from "@/components/layout/Layout";
 import BlockTimeDialog from "@/components/practitioner/BlockTimeDialog";
 import WeeklyView from "@/components/practitioner/WeeklyView";
 import { toast } from "sonner";
+import { getReports } from "@/data/medical-reports-store";
+import { reportTypeLabels, reportStatusLabels } from "@/types/medical-reports";
+import { Badge } from "@/components/ui/badge";
+
+// ============ Types ============
 
 type AppointmentStatus = "confirmed" | "pending" | "blocked" | "completed" | "in_progress" | "cancelled" | "no_show";
 
@@ -48,12 +54,20 @@ const statusConfig: Record<AppointmentStatus, { label: string; color: string }> 
   no_show: { label: "Não compareceu", color: "bg-destructive/10 text-destructive" },
 };
 
+// ============ Component ============
+
 export default function PractitionerDashboard() {
+  const navigate = useNavigate();
   const [agenda, setAgenda] = useState<Appointment[]>(initialAgenda);
   const [weekOffset, setWeekOffset] = useState(0);
   const [dialogState, setDialogState] = useState<{ open: boolean; action: "cancel" | "no_show" | null; aptId: string | null }>({
     open: false, action: null, aptId: null,
   });
+
+  // Recent reports for quick access
+  const recentReports = useMemo(() => {
+    return getReports().slice(0, 3);
+  }, []);
 
   const updateStatus = (id: string, status: AppointmentStatus) => {
     setAgenda((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
@@ -70,7 +84,6 @@ export default function PractitionerDashboard() {
   };
 
   const handleBlock = (startTime: string, endTime: string, reason: string) => {
-    // Generate blocked slots in 30min intervals
     const newBlocks: Appointment[] = [];
     let [h, m] = startTime.split(":").map(Number);
     let idx = agenda.length;
@@ -111,13 +124,13 @@ export default function PractitionerDashboard() {
         return (
           <div className="flex gap-1.5 md:gap-1">
             <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-primary hover:text-primary hover:bg-primary/10" title="Iniciar" onClick={() => handleStart(apt)}>
-              <Play className="w-4 h-4 md:w-4 md:h-4" />
+              <Play className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-destructive hover:text-destructive hover:bg-destructive/10" title="Cancelar" onClick={() => setDialogState({ open: true, action: "cancel", aptId: apt.id })}>
-              <X className="w-4 h-4 md:w-4 md:h-4" />
+              <X className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-warning hover:text-warning hover:bg-warning/10" title="Não compareceu" onClick={() => setDialogState({ open: true, action: "no_show", aptId: apt.id })}>
-              <UserX className="w-4 h-4 md:w-4 md:h-4" />
+              <UserX className="w-4 h-4" />
             </Button>
           </div>
         );
@@ -125,7 +138,7 @@ export default function PractitionerDashboard() {
         return (
           <div className="flex gap-1.5 md:gap-1">
             <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 text-success hover:text-success hover:bg-success/10" title="Concluir" onClick={() => handleComplete(apt)}>
-              <Check className="w-4 h-4 md:w-4 md:h-4" />
+              <Check className="w-4 h-4" />
             </Button>
           </div>
         );
@@ -139,20 +152,56 @@ export default function PractitionerDashboard() {
   return (
     <Layout>
       <div className="container py-8 md:py-12">
+        {/* Header with quick actions */}
         <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Agenda Profissional</h1>
             <p className="text-muted-foreground text-sm">Dra. Ana Mendes · Medicina Geral</p>
           </div>
-          <div className="flex justify-start md:justify-end">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => navigate("/pacientes")} className="gap-2">
+              <Users className="w-4 h-4" />
+              Pacientes
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/relatorios")} className="gap-2">
+              <FileText className="w-4 h-4" />
+              Relatórios
+            </Button>
+            <Button onClick={() => navigate("/relatorios")} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Novo Relatório
+            </Button>
             <BlockTimeDialog onBlock={handleBlock} />
           </div>
+        </div>
+
+        {/* Quick stats row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {[
+            { label: "Hoje", value: agenda.filter((a) => a.status !== "blocked").length, sub: "consultas" },
+            { label: "Confirmadas", value: agenda.filter((a) => a.status === "confirmed").length, sub: "pacientes" },
+            { label: "Pendentes", value: agenda.filter((a) => a.status === "pending").length, sub: "a confirmar" },
+            { label: "Relatórios recentes", value: recentReports.length, sub: "últimos" },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="bg-card border border-border rounded-lg p-3"
+            >
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="text-xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-[10px] text-muted-foreground">{stat.sub}</p>
+            </motion.div>
+          ))}
         </div>
 
         <Tabs defaultValue="today" className="space-y-6">
           <TabsList>
             <TabsTrigger value="today">Hoje ({agenda.filter((a) => a.status !== "blocked").length})</TabsTrigger>
             <TabsTrigger value="week">Semanal</TabsTrigger>
+            <TabsTrigger value="reports">Relatórios Recentes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="today">
@@ -192,9 +241,58 @@ export default function PractitionerDashboard() {
           <TabsContent value="week">
             <WeeklyView appointments={agenda} weekOffset={weekOffset} onWeekChange={setWeekOffset} />
           </TabsContent>
+
+          {/* Recent reports tab */}
+          <TabsContent value="reports">
+            <div className="space-y-3">
+              {recentReports.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Sem relatórios recentes</p>
+                </div>
+              ) : (
+                <>
+                  {recentReports.map((report, i) => (
+                    <motion.div
+                      key={report.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      className="bg-card border border-border rounded-lg p-4 hover:border-primary/30 transition-colors cursor-pointer"
+                      onClick={() => navigate("/relatorios")}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-mono text-xs text-muted-foreground">{report.id}</span>
+                            <Badge variant={report.status === "draft" ? "outline" : "default"} className={report.status === "finalized" ? "bg-accent text-accent-foreground text-xs" : "text-xs"}>
+                              {reportStatusLabels[report.status]}
+                            </Badge>
+                          </div>
+                          <p className="font-medium text-sm">{reportTypeLabels[report.type]}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {report.patientName} · {new Date(report.createdAt).toLocaleDateString("pt-PT")}
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="sm" className="gap-1">
+                          <FileText className="w-3 h-3" /> Ver
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ))}
+                  <div className="text-center pt-2">
+                    <Button variant="outline" onClick={() => navigate("/relatorios")} className="gap-2">
+                      Ver todos os relatórios
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
 
+      {/* Confirmation dialog */}
       <AlertDialog open={dialogState.open} onOpenChange={(open) => !open && setDialogState({ open: false, action: null, aptId: null })}>
         <AlertDialogContent>
           <AlertDialogHeader>
