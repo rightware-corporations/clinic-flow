@@ -63,16 +63,14 @@ export default function ProfilePage() {
   };
 
   const getRoleLabel = (role: string) => {
-    switch(role) {
-      case "admin": return "Administrador";
-      case "profissional": return "Profissional de Saúde";
-      default: return "Paciente";
-    }
+    const labels: Record<string, string> = { admin: "Administrador", profissional: "Profissional de Saúde", staff: "Funcionário", interno: "Interno/Estagiário", paciente: "Paciente" };
+    return labels[role] || "Paciente";
   };
 
   if (!user) return null;
 
-  const dashboardPath = user.role === "admin" ? "/admin" : user.role === "profissional" ? "/profissional" : "/paciente";
+  const routeMap: Record<string, string> = { admin: "/admin", profissional: "/profissional", staff: "/staff", interno: "/interno", paciente: "/paciente" };
+  const dashboardPath = routeMap[user.role] || "/paciente";
 
   return (
     <DashboardLayout>
