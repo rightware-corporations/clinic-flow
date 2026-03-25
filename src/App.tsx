@@ -18,6 +18,8 @@ import SuperDashboard from "./pages/SuperDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
 import InternDashboard from "./pages/InternDashboard";
 import CategoryPage from "./pages/CategoryPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
 import ProfilePage from "./pages/ProfilePage";
 import MedicalReportsPage from "./pages/MedicalReportsPage";
 import PatientProfilePage from "./pages/PatientProfilePage";
