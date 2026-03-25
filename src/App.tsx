@@ -40,6 +40,8 @@ function AnimatedRoutes() {
         <Route path="/servicos/:slug" element={<PageTransition><ServiceDetailPage /></PageTransition>} />
         <Route path="/categoria/:slug" element={<PageTransition><CategoryPage /></PageTransition>} />
         <Route path="/agendar" element={<PageTransition><BookingPage /></PageTransition>} />
+        <Route path="/sobre" element={<PageTransition><AboutPage /></PageTransition>} />
+        <Route path="/contacto" element={<PageTransition><ContactPage /></PageTransition>} />
         <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
         
         {/* Authenticated routes — all roles */}
