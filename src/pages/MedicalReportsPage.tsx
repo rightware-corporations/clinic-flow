@@ -8,7 +8,7 @@
 
 import { useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import Layout from "@/components/layout/Layout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import ReportList from "@/components/reports/ReportList";
 import ReportForm from "@/components/reports/ReportForm";
 import ReportView from "@/components/reports/ReportView";
