@@ -18,6 +18,8 @@ import SuperDashboard from "./pages/SuperDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
 import InternDashboard from "./pages/InternDashboard";
 import CategoryPage from "./pages/CategoryPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
 import ProfilePage from "./pages/ProfilePage";
 import MedicalReportsPage from "./pages/MedicalReportsPage";
 import PatientProfilePage from "./pages/PatientProfilePage";
@@ -38,6 +40,8 @@ function AnimatedRoutes() {
         <Route path="/servicos/:slug" element={<PageTransition><ServiceDetailPage /></PageTransition>} />
         <Route path="/categoria/:slug" element={<PageTransition><CategoryPage /></PageTransition>} />
         <Route path="/agendar" element={<PageTransition><BookingPage /></PageTransition>} />
+        <Route path="/sobre" element={<PageTransition><AboutPage /></PageTransition>} />
+        <Route path="/contacto" element={<PageTransition><ContactPage /></PageTransition>} />
         <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
         
         {/* Authenticated routes — all roles */}
