@@ -314,6 +314,6 @@ export default function PractitionerDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Layout>
+    </DashboardLayout>
   );
 }
