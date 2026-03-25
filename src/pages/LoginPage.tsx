@@ -9,12 +9,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
-// Determinar role baseado no prefixo do ID
-function determineRole(id: string): "paciente" | "profissional" | "admin" | null {
+/**
+ * Role system:
+ * M### = Médico (profissional)
+ * C### = Cliente (paciente)
+ * A### = Admin
+ * S### = Staff (funcionário)
+ * I### = Interno (intern)
+ */
+
+type UserRole = "paciente" | "profissional" | "admin" | "staff" | "interno";
+
+function determineRole(id: string): UserRole | null {
   const upper = id.toUpperCase();
   if (upper.startsWith("A")) return "admin";
   if (upper.startsWith("M")) return "profissional";
   if (upper.startsWith("C")) return "paciente";
+  if (upper.startsWith("S")) return "staff";
+  if (upper.startsWith("I")) return "interno";
   return null;
 }
 
@@ -22,6 +34,8 @@ function getRoleRedirect(role: string): string {
   switch (role) {
     case "admin": return "/admin";
     case "profissional": return "/profissional";
+    case "staff": return "/staff";
+    case "interno": return "/interno";
     default: return "/paciente";
   }
 }
@@ -30,18 +44,22 @@ function getRoleLabel(role: string): string {
   switch (role) {
     case "admin": return "Administrador";
     case "profissional": return "Médico";
-    default: return "Cliente";
+    case "staff": return "Funcionário";
+    case "interno": return "Interno";
+    default: return "Paciente";
   }
 }
 
 function validateId(id: string): boolean {
-  return /^[AaMmCc]\d{3,}$/.test(id);
+  return /^[AaMmCcSsIi]\d{3,}$/.test(id);
 }
 
-function generateId(role: "paciente" | "profissional" | "admin"): string {
-  const prefix = role === "admin" ? "A" : role === "profissional" ? "M" : "C";
-  const randomNum = Math.floor(Math.random() * 9000) + 1000; // 1000-9999
-  return `${prefix}${randomNum}`;
+function generateId(role: UserRole): string {
+  const prefixMap: Record<UserRole, string> = {
+    admin: "A", profissional: "M", paciente: "C", staff: "S", interno: "I",
+  };
+  const randomNum = Math.floor(Math.random() * 9000) + 1000;
+  return `${prefixMap[role]}${randomNum}`;
 }
 
 export default function LoginPage() {
@@ -49,18 +67,17 @@ export default function LoginPage() {
   const [loginId, setLoginId] = useState("");
   const [loginPass, setLoginPass] = useState("");
   const [regName, setRegName] = useState("");
-  const [regAccountType, setRegAccountType] = useState<"paciente" | "profissional" | "admin">("paciente");
+  const [regAccountType, setRegAccountType] = useState<UserRole>("paciente");
   const [regPass, setRegPass] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     setTimeout(() => {
       const id = loginId.toUpperCase();
       if (!validateId(id)) {
-        toast.error("ID inválido. Use o formato: M001, C001 ou A001");
+        toast.error("ID inválido. Use o formato correto (ex: M001, C001, A001, S001, I001)");
         setIsLoading(false);
         return;
       }
@@ -70,12 +87,7 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
       }
-
-      localStorage.setItem("user", JSON.stringify({
-        id,
-        role,
-        name: id,
-      }));
+      localStorage.setItem("user", JSON.stringify({ id, role, name: id }));
       window.dispatchEvent(new Event("auth-change"));
       toast.success(`Bem-vindo! Acesso como ${getRoleLabel(role)}`);
       navigate(getRoleRedirect(role));
@@ -86,19 +98,12 @@ export default function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     setTimeout(() => {
       const id = generateId(regAccountType);
-      const role = regAccountType;
-
-      localStorage.setItem("user", JSON.stringify({
-        id,
-        role,
-        name: regName || id,
-      }));
+      localStorage.setItem("user", JSON.stringify({ id, role: regAccountType, name: regName || id }));
       window.dispatchEvent(new Event("auth-change"));
       toast.success(`Conta criada! O seu ID é: ${id}`, { duration: 6000 });
-      navigate(getRoleRedirect(role));
+      navigate(getRoleRedirect(regAccountType));
       setIsLoading(false);
     }, 600);
   };
@@ -118,22 +123,22 @@ export default function LoginPage() {
           <h2 className="text-3xl font-bold text-primary-foreground mb-3">MedClínica</h2>
           <p className="text-sm uppercase tracking-widest text-primary-foreground/50 mb-6">Sistema de Gestão</p>
           <p className="text-primary-foreground/70 leading-relaxed">
-            Acesso unificado por ID. O sistema identifica automaticamente o seu tipo de conta pelo prefixo do ID.
+            Acesso unificado por ID. O sistema identifica automaticamente o seu tipo de conta pelo prefixo.
           </p>
           <div className="mt-6 space-y-2 text-left bg-primary-foreground/10 rounded-xl p-4 backdrop-blur-sm">
             <p className="text-xs font-semibold text-primary-foreground/80 uppercase tracking-wider mb-3">Classes de ID</p>
-            <div className="flex items-center gap-3 text-sm text-primary-foreground/70">
-              <span className="font-mono font-bold text-primary-foreground bg-primary-foreground/10 px-2 py-0.5 rounded">M###</span>
-              <span>Médicos / Profissionais</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-primary-foreground/70">
-              <span className="font-mono font-bold text-primary-foreground bg-primary-foreground/10 px-2 py-0.5 rounded">C###</span>
-              <span>Clientes / Pacientes</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-primary-foreground/70">
-              <span className="font-mono font-bold text-primary-foreground bg-primary-foreground/10 px-2 py-0.5 rounded">A###</span>
-              <span>Administradores</span>
-            </div>
+            {[
+              { prefix: "M###", label: "Médicos / Profissionais" },
+              { prefix: "C###", label: "Clientes / Pacientes" },
+              { prefix: "A###", label: "Administradores" },
+              { prefix: "S###", label: "Staff / Funcionários" },
+              { prefix: "I###", label: "Internos / Estagiários" },
+            ].map((item) => (
+              <div key={item.prefix} className="flex items-center gap-3 text-sm text-primary-foreground/70">
+                <span className="font-mono font-bold text-primary-foreground bg-primary-foreground/10 px-2 py-0.5 rounded">{item.prefix}</span>
+                <span>{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -141,7 +146,6 @@ export default function LoginPage() {
       {/* Right form */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 bg-background">
         <div className="w-full max-w-[400px]">
-          {/* Mobile header */}
           <div className="flex flex-col items-center mb-8 lg:hidden">
             <div className="w-14 h-14 rounded-2xl medical-gradient flex items-center justify-center mb-3">
               <Stethoscope className="w-7 h-7 text-primary-foreground" />
@@ -150,7 +154,6 @@ export default function LoginPage() {
             <p className="text-xs text-muted-foreground">Sistema de Gestão</p>
           </div>
 
-          {/* Desktop header */}
           <div className="hidden lg:block mb-8">
             <h1 className="text-2xl font-bold mb-1">Bem-vindo de volta</h1>
             <p className="text-sm text-muted-foreground">Entre com o seu ID e password.</p>
@@ -163,112 +166,61 @@ export default function LoginPage() {
             </TabsList>
 
             <TabsContent value="login">
-              <motion.form
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-5"
-                onSubmit={handleLogin}
-              >
+              <motion.form initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5" onSubmit={handleLogin}>
                 <div className="space-y-1.5">
                   <Label htmlFor="login-id">ID de Utilizador</Label>
                   <div className="relative">
                     <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="login-id"
-                      placeholder="Ex: M001, C001, A001"
-                      className="pl-10 h-11 uppercase font-mono"
-                      value={loginId}
-                      onChange={(e) => setLoginId(e.target.value.toUpperCase())}
-                      maxLength={10}
-                      required
-                    />
+                    <Input id="login-id" placeholder="Ex: M001, C001, A001, S001, I001" className="pl-10 h-11 uppercase font-mono" value={loginId} onChange={(e) => setLoginId(e.target.value.toUpperCase())} maxLength={10} required />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    M = Médico · C = Cliente · A = Admin
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">M = Médico · C = Paciente · A = Admin · S = Staff · I = Interno</p>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="login-pass">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="login-pass"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10 h-11"
-                      value={loginPass}
-                      onChange={(e) => setLoginPass(e.target.value)}
-                      required
-                    />
+                    <Input id="login-pass" type="password" placeholder="••••••••" className="pl-10 h-11" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} required />
                   </div>
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full h-11 medical-gradient border-0 gap-2 text-sm font-semibold"
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full h-11 medical-gradient border-0 gap-2 text-sm font-semibold" disabled={isLoading}>
                   {isLoading ? "A entrar..." : "Entrar"} <ArrowRight className="w-4 h-4" />
                 </Button>
               </motion.form>
             </TabsContent>
 
             <TabsContent value="register">
-              <motion.form
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-5"
-                onSubmit={handleRegister}
-              >
+              <motion.form initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5" onSubmit={handleRegister}>
                 <div className="space-y-1.5">
                   <Label htmlFor="reg-name">Nome completo</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="reg-name"
-                      placeholder="João Silva"
-                      className="pl-10 h-11"
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      required
-                    />
+                    <Input id="reg-name" placeholder="João Silva" className="pl-10 h-11" value={regName} onChange={(e) => setRegName(e.target.value)} required />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="reg-type">Tipo de Conta</Label>
-                  <Select value={regAccountType} onValueChange={(v) => setRegAccountType(v as any)}>
+                  <Select value={regAccountType} onValueChange={(v) => setRegAccountType(v as UserRole)}>
                     <SelectTrigger className="h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="paciente">Cliente / Paciente</SelectItem>
+                      <SelectItem value="paciente">Paciente</SelectItem>
                       <SelectItem value="profissional">Médico / Profissional</SelectItem>
+                      <SelectItem value="staff">Staff / Funcionário</SelectItem>
+                      <SelectItem value="interno">Interno / Estagiário</SelectItem>
                       <SelectItem value="admin">Administrador</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    O seu ID será gerado automaticamente
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">O seu ID será gerado automaticamente</p>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="reg-pass">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="reg-pass"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10 h-11"
-                      value={regPass}
-                      onChange={(e) => setRegPass(e.target.value)}
-                      required
-                    />
+                    <Input id="reg-pass" type="password" placeholder="••••••••" className="pl-10 h-11" value={regPass} onChange={(e) => setRegPass(e.target.value)} required />
                   </div>
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full h-11 medical-gradient border-0 gap-2 text-sm font-semibold"
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full h-11 medical-gradient border-0 gap-2 text-sm font-semibold" disabled={isLoading}>
                   {isLoading ? "A criar conta..." : "Criar Conta"} <ArrowRight className="w-4 h-4" />
                 </Button>
               </motion.form>
@@ -276,9 +228,7 @@ export default function LoginPage() {
           </Tabs>
 
           <div className="mt-8 text-center">
-            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              ← Voltar ao início
-            </Link>
+            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">← Voltar ao início</Link>
           </div>
         </div>
       </div>
