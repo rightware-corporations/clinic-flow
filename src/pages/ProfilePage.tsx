@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import Layout from "@/components/layout/Layout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,7 +75,7 @@ export default function ProfilePage() {
   const dashboardPath = user.role === "admin" ? "/admin" : user.role === "profissional" ? "/profissional" : "/paciente";
 
   return (
-    <Layout>
+    <DashboardLayout>
       <div className="container py-8 md:py-12 max-w-2xl">
         <Button variant="ghost" size="sm" className="mb-6 -ml-2 text-muted-foreground gap-1" onClick={() => navigate(dashboardPath)}>
           <ArrowLeft className="w-4 h-4" /> Voltar ao Dashboard
@@ -163,6 +163,6 @@ export default function ProfilePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Layout>
+    </DashboardLayout>
   );
 }
