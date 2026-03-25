@@ -15,6 +15,8 @@ import PatientDashboard from "./pages/PatientDashboard";
 import PractitionerDashboard from "./pages/PractitionerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuperDashboard from "./pages/SuperDashboard";
+import StaffDashboard from "./pages/StaffDashboard";
+import InternDashboard from "./pages/InternDashboard";
 import CategoryPage from "./pages/CategoryPage";
 import ProfilePage from "./pages/ProfilePage";
 import MedicalReportsPage from "./pages/MedicalReportsPage";
@@ -30,6 +32,7 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        {/* Public routes */}
         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
         <Route path="/servicos" element={<PageTransition><ServicesPage /></PageTransition>} />
         <Route path="/servicos/:slug" element={<PageTransition><ServiceDetailPage /></PageTransition>} />
@@ -37,18 +40,21 @@ function AnimatedRoutes() {
         <Route path="/agendar" element={<PageTransition><BookingPage /></PageTransition>} />
         <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
         
-        <Route path="/perfil" element={<ProtectedRoute><PageTransition><ProfilePage /></PageTransition></ProtectedRoute>} />
-        <Route path="/paciente" element={<ProtectedRoute allowedRoles={["paciente"]}><PageTransition><PatientDashboard /></PageTransition></ProtectedRoute>} />
-        <Route path="/profissional" element={<ProtectedRoute allowedRoles={["profissional"]}><PageTransition><PractitionerDashboard /></PageTransition></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><PageTransition><AdminDashboard /></PageTransition></ProtectedRoute>} />
-        <Route path="/super" element={<ProtectedRoute allowedRoles={["admin"]}><PageTransition><SuperDashboard /></PageTransition></ProtectedRoute>} />
+        {/* Authenticated routes — all roles */}
+        <Route path="/perfil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         
-        {/* Medical reports system — accessible to doctors and admins */}
-        <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["profissional", "admin"]}><PageTransition><MedicalReportsPage /></PageTransition></ProtectedRoute>} />
+        {/* Role-specific dashboards */}
+        <Route path="/paciente" element={<ProtectedRoute allowedRoles={["paciente"]}><PatientDashboard /></ProtectedRoute>} />
+        <Route path="/profissional" element={<ProtectedRoute allowedRoles={["profissional"]}><PractitionerDashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/super" element={<ProtectedRoute allowedRoles={["admin"]}><SuperDashboard /></ProtectedRoute>} />
+        <Route path="/staff" element={<ProtectedRoute allowedRoles={["staff"]}><StaffDashboard /></ProtectedRoute>} />
+        <Route path="/interno" element={<ProtectedRoute allowedRoles={["interno"]}><InternDashboard /></ProtectedRoute>} />
         
-        {/* Patient management — accessible to doctors and admins */}
-        <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["profissional", "admin"]}><PageTransition><PatientsListPage /></PageTransition></ProtectedRoute>} />
-        <Route path="/pacientes/:id" element={<ProtectedRoute allowedRoles={["profissional", "admin"]}><PageTransition><PatientProfilePage /></PageTransition></ProtectedRoute>} />
+        {/* Medical system — doctors, staff, admins, interns (read-only) */}
+        <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["profissional", "admin", "interno"]}><MedicalReportsPage /></ProtectedRoute>} />
+        <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["profissional", "admin", "staff", "interno"]}><PatientsListPage /></ProtectedRoute>} />
+        <Route path="/pacientes/:id" element={<ProtectedRoute allowedRoles={["profissional", "admin", "staff", "interno"]}><PatientProfilePage /></ProtectedRoute>} />
         
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>

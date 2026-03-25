@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Building2, Users, CalendarDays, ShieldCheck, Globe, Activity, Lock, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Layout from "@/components/layout/Layout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const globalStats = [
   { label: "Unidades", value: "3", icon: Building2 },
@@ -19,7 +19,7 @@ const units = [
 
 export default function SuperDashboard() {
   return (
-    <Layout>
+    <DashboardLayout>
       <div className="container py-8 md:py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -115,6 +115,6 @@ export default function SuperDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }
