@@ -128,6 +128,6 @@ export default function PatientsListPage() {
           </div>
         )}
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }
