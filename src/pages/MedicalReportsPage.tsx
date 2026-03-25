@@ -94,8 +94,8 @@ export default function MedicalReportsPage() {
   }, []);
 
   return (
-    <Layout>
-      <div className="container py-8 md:py-12" key={refreshKey}>
+    <DashboardLayout>
+      <div className="p-6 md:p-8" key={refreshKey}>
         {viewMode === "list" && (
           <ReportList
             reports={reports}
