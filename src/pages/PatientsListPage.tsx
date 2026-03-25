@@ -32,8 +32,8 @@ export default function PatientsListPage() {
   }, [patients, search]);
 
   return (
-    <Layout>
-      <div className="container py-8 md:py-12 space-y-6">
+    <DashboardLayout>
+      <div className="p-6 md:p-8 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Pacientes</h1>
