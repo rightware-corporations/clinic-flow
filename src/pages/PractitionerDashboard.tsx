@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import Layout from "@/components/layout/Layout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import BlockTimeDialog from "@/components/practitioner/BlockTimeDialog";
 import WeeklyView from "@/components/practitioner/WeeklyView";
 import { toast } from "sonner";
