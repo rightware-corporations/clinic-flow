@@ -236,11 +236,9 @@ export default function Navbar() {
       <div className="container flex items-center justify-between h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg medical-gradient flex items-center justify-center">
-            <Stethoscope className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src="/clinic.png" alt="MED Clinica" className="w-9 h-9 rounded-lg object-contain" />
           <div className="flex flex-col">
-            <span className="text-base font-bold leading-tight text-foreground tracking-tight">MedClínica</span>
+            <span className="text-base font-bold leading-tight text-foreground tracking-tight">MED Clinica</span>
             <span className="text-[10px] text-muted-foreground leading-none tracking-wider uppercase">Premium Healthcare</span>
           </div>
         </Link>

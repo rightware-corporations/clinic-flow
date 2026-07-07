@@ -8,7 +8,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
-  Stethoscope,
   LayoutDashboard,
   Users,
   FileText,
@@ -155,12 +154,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-4 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
-          <Stethoscope className="w-5 h-5 text-primary-foreground" />
-        </div>
+        <img src="/clinic.png" alt="MED Clinica" className="w-9 h-9 rounded-lg object-contain shrink-0" />
         {!collapsed && (
           <div className="min-w-0">
-            <p className="font-bold text-sm text-foreground truncate">MedClínica</p>
+            <p className="font-bold text-sm text-foreground truncate">MED Clinica</p>
             <p className="text-[10px] text-muted-foreground">Sistema de Gestão</p>
           </div>
         )}
@@ -247,10 +244,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile header + sidebar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Stethoscope className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-sm">MedClínica</span>
+          <img src="/clinic.png" alt="MED Clinica" className="w-8 h-8 rounded-lg object-contain" />
+          <span className="font-bold text-sm">MED Clinica</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
