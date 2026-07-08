@@ -53,13 +53,13 @@ export default function AboutPage() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <Building2 className="w-4 h-4" />
-              Sobre a MedClínica
+              Sobre a MED Clinica
             </div>
             <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
               Cuidar com <span className="text-primary">excelência</span> é a nossa missão
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Desde 2010, a MedClínica é referência em cuidados de saúde premium em Lisboa.
+              Desde 2010, a MED Clinica é referência em cuidados de saúde premium em Lisboa.
               Combinamos tecnologia de ponta com um atendimento humano e personalizado.
             </p>
           </motion.div>
@@ -143,7 +143,7 @@ export default function AboutPage() {
           >
             <h2 className="text-3xl font-bold text-foreground mb-3">Os nossos valores</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Princípios que guiam cada decisão e cada interação na MedClínica.
+              Princípios que guiam cada decisão e cada interação na MED Clinica.
             </p>
           </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

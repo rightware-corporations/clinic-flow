@@ -33,7 +33,7 @@ export default function HeroSection() {
     <section ref={sectionRef} className="relative overflow-hidden">
       {/* Parallax background */}
       <motion.div className="absolute inset-0" style={{ y: imageY, scale: imageScale }}>
-        <img src={heroImage} alt="MedClínica" className="w-full h-full object-cover" />
+        <img src={heroImage} alt="MED Clinica" className="w-full h-full object-cover" />
       </motion.div>
       <motion.div className="absolute inset-0 hero-gradient" style={{ opacity: overlayOpacity }} />
 

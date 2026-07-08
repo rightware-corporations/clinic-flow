@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Lock, User, ArrowRight, Stethoscope, Hash } from "lucide-react";
+import { Lock, User, ArrowRight, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,10 +117,10 @@ export default function LoginPage() {
           <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full bg-primary-foreground/10 blur-3xl" />
         </div>
         <div className="max-w-md text-center relative z-10">
-          <div className="w-20 h-20 rounded-2xl bg-primary-foreground/15 flex items-center justify-center mx-auto mb-8 backdrop-blur-sm border border-primary-foreground/10">
-            <Stethoscope className="w-10 h-10 text-primary-foreground" />
+          <div className="w-20 h-20 rounded-2xl bg-primary-foreground flex items-center justify-center mx-auto mb-8 backdrop-blur-sm border border-primary-foreground/10 shadow-lg">
+            <img src="/med-clinica-mark.svg" alt="MED Clinica" className="w-14 h-14 rounded-xl object-contain" />
           </div>
-          <h2 className="text-3xl font-bold text-primary-foreground mb-3">MedClínica</h2>
+          <h2 className="text-3xl font-bold text-primary-foreground mb-3">MED Clinica</h2>
           <p className="text-sm uppercase tracking-widest text-primary-foreground/50 mb-6">Sistema de Gestão</p>
           <p className="text-primary-foreground/70 leading-relaxed">
             Acesso unificado por ID. O sistema identifica automaticamente o seu tipo de conta pelo prefixo.
@@ -147,10 +147,10 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 bg-background">
         <div className="w-full max-w-[400px]">
           <div className="flex flex-col items-center mb-8 lg:hidden">
-            <div className="w-14 h-14 rounded-2xl medical-gradient flex items-center justify-center mb-3">
-              <Stethoscope className="w-7 h-7 text-primary-foreground" />
+            <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-3 shadow-sm">
+              <img src="/med-clinica-mark.svg" alt="MED Clinica" className="w-10 h-10 rounded-lg object-contain" />
             </div>
-            <h1 className="text-xl font-bold">MedClínica</h1>
+            <h1 className="text-xl font-bold">MED Clinica</h1>
             <p className="text-xs text-muted-foreground">Sistema de Gestão</p>
           </div>
 

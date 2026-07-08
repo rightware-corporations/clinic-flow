@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Stethoscope, Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -9,10 +9,10 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 rounded-lg medical-gradient flex items-center justify-center">
-                <Stethoscope className="w-5 h-5 text-primary-foreground" />
+              <div className="w-9 h-9 rounded-lg bg-primary-foreground flex items-center justify-center">
+                <img src="/med-clinica-mark.svg" alt="MED Clinica" className="w-8 h-8 rounded-md object-contain" />
               </div>
-              <span className="text-base font-bold text-primary-foreground">MedClínica</span>
+              <span className="text-base font-bold text-primary-foreground">MED Clinica</span>
             </div>
             <p className="text-sm leading-relaxed text-primary-foreground/60">
               Cuidados de saúde premium com tecnologia de ponta e atendimento humanizado.
@@ -65,7 +65,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-primary-foreground/10 text-center text-xs text-primary-foreground/40">
-          © {new Date().getFullYear()} MedClínica. Todos os direitos reservados.
+          © {new Date().getFullYear()} MED Clinica. Todos os direitos reservados.
         </div>
       </div>
     </footer>

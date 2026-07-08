@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">MED Clinica</title>
+  <desc id="desc">Professional medical clinic mark with cross and care lines.</desc>
+  <rect width="64" height="64" rx="16" fill="#F8FAFC"/>
+  <path d="M32 8.5c11.1 0 20.5 8.6 21.4 19.6.9 11-7.1 21.1-18 22.8-8.6 1.3-17.1-2.7-21.5-10.2" fill="none" stroke="#111827" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M14.7 24.8c2.9-8 10.4-13.3 18.9-13.3 5.8 0 11.3 2.5 15.1 6.9" fill="none" stroke="#2B7A78" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M19.5 38.5c2.5 4.2 7 6.8 11.9 6.8 4.1 0 8-1.8 10.6-5" fill="none" stroke="#2B7A78" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M32 20.5v23M20.5 32h23" fill="none" stroke="#111827" stroke-width="4.4" stroke-linecap="round"/>
+  <path d="M8.5 34.5h7l3.9-7.7 6.6 14 4.4-8.8h9.1" fill="none" stroke="#111827" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

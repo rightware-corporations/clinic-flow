@@ -29,9 +29,9 @@ export default function AboutSection() {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Sobre a MedClínica</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Sobre a MED Clinica</h2>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              A MedClínica é uma unidade de saúde multidisciplinar dedicada a oferecer cuidados
+              A MED Clinica é uma unidade de saúde multidisciplinar dedicada a oferecer cuidados
               médicos de excelência. Com instalações modernas e uma equipa altamente qualificada,
               proporcionamos um atendimento humanizado e personalizado a cada paciente.
             </p>

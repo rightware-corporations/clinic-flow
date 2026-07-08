@@ -154,7 +154,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-4 flex items-center gap-3">
-        <img src="/clinic.png" alt="MED Clinica" className="w-9 h-9 rounded-lg object-contain shrink-0" />
+        <img src="/med-clinica-mark.svg" alt="MED Clinica" className="w-9 h-9 rounded-lg object-contain shrink-0" />
         {!collapsed && (
           <div className="min-w-0">
             <p className="font-bold text-sm text-foreground truncate">MED Clinica</p>
@@ -244,7 +244,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile header + sidebar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <img src="/clinic.png" alt="MED Clinica" className="w-8 h-8 rounded-lg object-contain" />
+          <img src="/med-clinica-mark.svg" alt="MED Clinica" className="w-8 h-8 rounded-lg object-contain" />
           <span className="font-bold text-sm">MED Clinica</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>

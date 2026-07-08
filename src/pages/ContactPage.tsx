@@ -167,7 +167,7 @@ export default function ContactPage() {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
               <div className="h-full min-h-[400px] rounded-2xl overflow-hidden border shadow-sm">
                 <iframe
-                  title="Localização MedClínica"
+                  title="Localização MED Clinica"
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3113.2!2d-9.1466!3d38.7223!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd19347a1a0a0a0a%3A0x0!2sAv.+da+Liberdade%2C+Lisboa!5e0!3m2!1spt-PT!2spt!4v1"
                   className="w-full h-full"
                   style={{ border: 0, minHeight: 400 }}

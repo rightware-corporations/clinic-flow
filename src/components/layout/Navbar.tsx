@@ -236,7 +236,7 @@ export default function Navbar() {
       <div className="container flex items-center justify-between h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
-          <img src="/clinic.png" alt="MED Clinica" className="w-9 h-9 rounded-lg object-contain" />
+          <img src="/med-clinica-mark.svg" alt="MED Clinica" className="w-9 h-9 rounded-lg object-contain" />
           <div className="flex flex-col">
             <span className="text-base font-bold leading-tight text-foreground tracking-tight">MED Clinica</span>
             <span className="text-[10px] text-muted-foreground leading-none tracking-wider uppercase">Premium Healthcare</span>
