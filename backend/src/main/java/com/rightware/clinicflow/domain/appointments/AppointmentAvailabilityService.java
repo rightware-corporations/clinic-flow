@@ -35,6 +35,22 @@ public class AppointmentAvailabilityService {
         if(locked.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ACTIVE_PRACTITIONER_REQUIRED");
         }
+        // Share-lock catalog rows. Admin deactivation takes FOR UPDATE on
+        // these same rows so a booking cannot race a catalog deactivation.
+        List<UUID> lockedUnits=jdbc.queryForList("""
+            SELECT id FROM clinic_units WHERE tenant_id=:tenant AND id=:unit
+              AND active FOR SHARE
+            """,Map.of("tenant",tenant,"unit",unit),UUID.class);
+        if(lockedUnits.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ACTIVE_UNIT_REQUIRED");
+        }
+        List<UUID> lockedServices=jdbc.queryForList("""
+            SELECT id FROM service_definitions WHERE tenant_id=:tenant AND id=:service
+              AND active FOR SHARE
+            """,Map.of("tenant",tenant,"service",service),UUID.class);
+        if(lockedServices.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ACTIVE_SERVICE_REQUIRED");
+        }
         LocalDate now=LocalDate.now();
         if (start.toLocalDate().isBefore(now) ||
             start.toLocalDate().isAfter(now.plusDays(180))) {

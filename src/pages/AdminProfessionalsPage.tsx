@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Stethoscope, Pencil, UserRound, RefreshCw, BookOpen } from "lucide-react";
 import { toast } from "sonner";
@@ -322,7 +323,7 @@ export default function AdminProfessionalsPage() {
                       {unit.name}{!unit.active?" (inactiva)":""}
                     </Label>
                   </div>)}
-                {data?.units.length===0 && <p className="text-xs text-muted-foreground">Crie uma unidade clínica primeiro.</p>}
+                {data?.units.length===0 && <p className="text-xs text-muted-foreground">Crie uma unidade clínica primeiro. <Link className="text-primary underline" to="/catalogo">Gerir unidades</Link></p>}
               </div>
             </fieldset>
             <fieldset className="border rounded-lg p-4 space-y-3">
@@ -338,7 +339,7 @@ export default function AdminProfessionalsPage() {
                       {service.name}{!service.active?" (inactivo)":""}
                     </Label>
                   </div>)}
-                {data?.services.length===0 && <p className="text-xs text-muted-foreground">Registe serviços primeiro.</p>}
+                {data?.services.length===0 && <p className="text-xs text-muted-foreground">Registe serviços primeiro. <Link className="text-primary underline" to="/catalogo">Gerir serviços</Link></p>}
               </div>
             </fieldset>
             <DialogFooter>
