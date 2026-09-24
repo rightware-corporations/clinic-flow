@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { logout as serverLogout } from "@/lib/clinicflow-api";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -58,7 +59,6 @@ function getMenuItems(role: string): NavItem[] {
         { label: "Pacientes", href: "/pacientes", icon: Users },
         { label: "Relatórios", href: "/relatorios", icon: FileText },
         { label: "Agendamentos", href: "/agendar", icon: Calendar },
-        { label: "Super Admin", href: "/super", icon: Shield },
         ...common,
       ];
     case "profissional":
@@ -137,12 +137,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return () => window.removeEventListener("auth-change", checkUser);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    window.dispatchEvent(new Event("auth-change"));
-    toast.success("Sessão terminada");
-    navigate("/");
-    setLogoutOpen(false);
+  const handleLogout = async () => {
+    try {
+      await serverLogout();
+      localStorage.removeItem("user");
+      sessionStorage.removeItem("clinicflow:tenant");
+      window.dispatchEvent(new Event("auth-change"));
+      toast.success("Sessão terminada");
+      navigate("/");
+      setLogoutOpen(false);
+    } catch {
+      toast.error("Não foi possível terminar a sessão. Tente novamente.");
+    }
   };
 
   if (!user) return <>{children}</>;

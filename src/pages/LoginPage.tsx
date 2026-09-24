@@ -1,237 +1,126 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Lock, User, ArrowRight, Hash } from "lucide-react";
+import { ArrowRight, Lock, Mail } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
+import { login, logout, type ClinicMembership } from "@/lib/clinicflow-api";
 
-/**
- * Role system:
- * M### = Médico (profissional)
- * C### = Cliente (paciente)
- * A### = Admin
- * S### = Staff (funcionário)
- * I### = Interno (intern)
- */
-
-type UserRole = "paciente" | "profissional" | "admin" | "staff" | "interno";
-
-function determineRole(id: string): UserRole | null {
-  const upper = id.toUpperCase();
-  if (upper.startsWith("A")) return "admin";
-  if (upper.startsWith("M")) return "profissional";
-  if (upper.startsWith("C")) return "paciente";
-  if (upper.startsWith("S")) return "staff";
-  if (upper.startsWith("I")) return "interno";
-  return null;
-}
-
-function getRoleRedirect(role: string): string {
+/** The frontend never assigns roles; they come from verified server memberships. */
+function dashboardFor(role: ClinicMembership["role"]): string {
   switch (role) {
-    case "admin": return "/admin";
-    case "profissional": return "/profissional";
-    case "staff": return "/staff";
-    case "interno": return "/interno";
-    default: return "/paciente";
+    case "CLINIC_ADMIN": return "/admin";
+    case "RECEPTION": return "/staff";
+    case "PRACTITIONER": return "/profissional";
+    case "INTERN": return "/interno";
+    case "PATIENT": return "/paciente";
   }
 }
 
-function getRoleLabel(role: string): string {
-  switch (role) {
-    case "admin": return "Administrador";
-    case "profissional": return "Médico";
-    case "staff": return "Funcionário";
-    case "interno": return "Interno";
-    default: return "Paciente";
-  }
-}
-
-function validateId(id: string): boolean {
-  return /^[AaMmCcSsIi]\d{3,}$/.test(id);
-}
-
-function generateId(role: UserRole): string {
-  const prefixMap: Record<UserRole, string> = {
-    admin: "A", profissional: "M", paciente: "C", staff: "S", interno: "I",
-  };
-  const randomNum = Math.floor(Math.random() * 9000) + 1000;
-  return `${prefixMap[role]}${randomNum}`;
-}
+const displayRole: Record<ClinicMembership["role"], string> = {
+  CLINIC_ADMIN: "admin",
+  RECEPTION: "staff",
+  PRACTITIONER: "profissional",
+  INTERN: "interno",
+  PATIENT: "paciente",
+};
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [loginId, setLoginId] = useState("");
-  const [loginPass, setLoginPass] = useState("");
-  const [regName, setRegName] = useState("");
-  const [regAccountType, setRegAccountType] = useState<UserRole>("paciente");
-  const [regPass, setRegPass] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      const id = loginId.toUpperCase();
-      if (!validateId(id)) {
-        toast.error("ID inválido. Use o formato correto (ex: M001, C001, A001, S001, I001)");
-        setIsLoading(false);
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    try {
+      const current = await login(email.trim(), password);
+      const preferred = sessionStorage.getItem("clinicflow:tenant");
+      const membership = current.memberships.find(m => m.tenantId === preferred)
+        ?? current.memberships[0];
+      if (!membership) {
+        await logout();
+        toast.error("Sem clínica activa. Contacte a administração.");
         return;
       }
-      const role = determineRole(id);
-      if (!role) {
-        toast.error("Prefixo de ID não reconhecido");
-        setIsLoading(false);
-        return;
-      }
-      localStorage.setItem("user", JSON.stringify({ id, role, name: id }));
+      // Session cookie (HttpOnly) is the only authentication authority.
+      // localStorage is retained as a display cache for legacy dashboard components.
+      sessionStorage.setItem("clinicflow:tenant", membership.tenantId);
+      localStorage.setItem("user", JSON.stringify({
+        id: current.id, name: current.displayName, email: current.email,
+        role: displayRole[membership.role], tenantId: membership.tenantId,
+      }));
       window.dispatchEvent(new Event("auth-change"));
-      toast.success(`Bem-vindo! Acesso como ${getRoleLabel(role)}`);
-      navigate(getRoleRedirect(role));
-      setIsLoading(false);
-    }, 600);
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      const id = generateId(regAccountType);
-      localStorage.setItem("user", JSON.stringify({ id, role: regAccountType, name: regName || id }));
-      window.dispatchEvent(new Event("auth-change"));
-      toast.success(`Conta criada! O seu ID é: ${id}`, { duration: 6000 });
-      navigate(getRoleRedirect(regAccountType));
-      setIsLoading(false);
-    }, 600);
+      navigate(dashboardFor(membership.role), { replace: true });
+    } catch (error) {
+      toast.error(error instanceof Error && error.message.includes("401")
+        ? "Email ou palavra-passe inválidos."
+        : "Não foi possível iniciar sessão. Verifique a ligação ao servidor.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left panel — desktop */}
-      <div className="hidden lg:flex lg:w-[45%] bg-gradient-to-br from-primary via-secondary to-accent items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-primary-foreground/20 blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full bg-primary-foreground/10 blur-3xl" />
-        </div>
-        <div className="max-w-md text-center relative z-10">
-          <div className="w-20 h-20 rounded-2xl bg-primary-foreground flex items-center justify-center mx-auto mb-8 backdrop-blur-sm border border-primary-foreground/10 shadow-lg">
-            <img src="/med-clinica-mark.svg" alt="MED Clinica" className="w-14 h-14 rounded-xl object-contain" />
-          </div>
-          <h2 className="text-3xl font-bold text-primary-foreground mb-3">MED Clinica</h2>
-          <p className="text-sm uppercase tracking-widest text-primary-foreground/50 mb-6">Sistema de Gestão</p>
-          <p className="text-primary-foreground/70 leading-relaxed">
-            Acesso unificado por ID. O sistema identifica automaticamente o seu tipo de conta pelo prefixo.
+    <main className="min-h-screen flex bg-background">
+      <section className="hidden lg:flex lg:w-[45%] bg-primary text-primary-foreground
+          items-center justify-center p-12">
+        <div className="max-w-md space-y-5">
+          <img src="/med-clinica-mark.svg" alt="" className="w-16 h-16 object-contain" />
+          <p className="uppercase tracking-widest text-sm opacity-75">Sistema de gestão clínica</p>
+          <h1 className="text-4xl font-bold">MED Clinica</h1>
+          <p className="text-base opacity-85 leading-relaxed">
+            Aceda à sua clínica com as credenciais atribuídas pela administração.
+            As permissões são verificadas no servidor.
           </p>
-          <div className="mt-6 space-y-2 text-left bg-primary-foreground/10 rounded-xl p-4 backdrop-blur-sm">
-            <p className="text-xs font-semibold text-primary-foreground/80 uppercase tracking-wider mb-3">Classes de ID</p>
-            {[
-              { prefix: "M###", label: "Médicos / Profissionais" },
-              { prefix: "C###", label: "Clientes / Pacientes" },
-              { prefix: "A###", label: "Administradores" },
-              { prefix: "S###", label: "Staff / Funcionários" },
-              { prefix: "I###", label: "Internos / Estagiários" },
-            ].map((item) => (
-              <div key={item.prefix} className="flex items-center gap-3 text-sm text-primary-foreground/70">
-                <span className="font-mono font-bold text-primary-foreground bg-primary-foreground/10 px-2 py-0.5 rounded">{item.prefix}</span>
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </div>
         </div>
-      </div>
-
-      {/* Right form */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 bg-background">
+      </section>
+      <section className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-[400px]">
-          <div className="flex flex-col items-center mb-8 lg:hidden">
-            <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-3 shadow-sm">
-              <img src="/med-clinica-mark.svg" alt="MED Clinica" className="w-10 h-10 rounded-lg object-contain" />
+          <img src="/med-clinica-mark.svg" alt="" className="w-12 h-12 mb-5 lg:hidden" />
+          <h2 className="text-2xl font-bold mb-1">Bem-vindo de volta</h2>
+          <p className="text-sm text-muted-foreground mb-8">
+            Entre com o email e palavra-passe da sua conta.
+          </p>
+          <motion.form initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="space-y-5" onSubmit={handleLogin}>
+            <div className="space-y-1.5">
+              <Label htmlFor="login-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="login-email" type="email" autoComplete="username"
+                  placeholder="nome@clinica.com" className="pl-10 h-11"
+                  value={email} onChange={e => setEmail(e.target.value)} required />
+              </div>
             </div>
-            <h1 className="text-xl font-bold">MED Clinica</h1>
-            <p className="text-xs text-muted-foreground">Sistema de Gestão</p>
-          </div>
-
-          <div className="hidden lg:block mb-8">
-            <h1 className="text-2xl font-bold mb-1">Bem-vindo de volta</h1>
-            <p className="text-sm text-muted-foreground">Entre com o seu ID e password.</p>
-          </div>
-
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="register">Registar</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <motion.form initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5" onSubmit={handleLogin}>
-                <div className="space-y-1.5">
-                  <Label htmlFor="login-id">ID de Utilizador</Label>
-                  <div className="relative">
-                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="login-id" placeholder="Ex: M001, C001, A001, S001, I001" className="pl-10 h-11 uppercase font-mono" value={loginId} onChange={(e) => setLoginId(e.target.value.toUpperCase())} maxLength={10} required />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">M = Médico · C = Paciente · A = Admin · S = Staff · I = Interno</p>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="login-pass">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="login-pass" type="password" placeholder="••••••••" className="pl-10 h-11" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} required />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full h-11 medical-gradient border-0 gap-2 text-sm font-semibold" disabled={isLoading}>
-                  {isLoading ? "A entrar..." : "Entrar"} <ArrowRight className="w-4 h-4" />
-                </Button>
-              </motion.form>
-            </TabsContent>
-
-            <TabsContent value="register">
-              <motion.form initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5" onSubmit={handleRegister}>
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-name">Nome completo</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="reg-name" placeholder="João Silva" className="pl-10 h-11" value={regName} onChange={(e) => setRegName(e.target.value)} required />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-type">Tipo de Conta</Label>
-                  <Select value={regAccountType} onValueChange={(v) => setRegAccountType(v as UserRole)}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="paciente">Paciente</SelectItem>
-                      <SelectItem value="profissional">Médico / Profissional</SelectItem>
-                      <SelectItem value="staff">Staff / Funcionário</SelectItem>
-                      <SelectItem value="interno">Interno / Estagiário</SelectItem>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">O seu ID será gerado automaticamente</p>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-pass">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="reg-pass" type="password" placeholder="••••••••" className="pl-10 h-11" value={regPass} onChange={(e) => setRegPass(e.target.value)} required />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full h-11 medical-gradient border-0 gap-2 text-sm font-semibold" disabled={isLoading}>
-                  {isLoading ? "A criar conta..." : "Criar Conta"} <ArrowRight className="w-4 h-4" />
-                </Button>
-              </motion.form>
-            </TabsContent>
-          </Tabs>
-
+            <div className="space-y-1.5">
+              <Label htmlFor="login-password">Palavra-passe</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="login-password" type="password" autoComplete="current-password"
+                  className="pl-10 h-11" value={password}
+                  onChange={e => setPassword(e.target.value)} required />
+              </div>
+            </div>
+            <Button type="submit" className="w-full h-11 medical-gradient border-0 gap-2"
+              disabled={loading}>
+              {loading ? "A autenticar..." : "Entrar"} <ArrowRight className="w-4 h-4" />
+            </Button>
+          </motion.form>
+          <p className="mt-5 text-xs text-muted-foreground">
+            O registo de administradores e profissionais é efectuado pela plataforma.
+            O auto-registo fica indisponível até existir um processo seguro de convites.
+          </p>
           <div className="mt-8 text-center">
-            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">← Voltar ao início</Link>
+            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
+              ← Voltar ao início
+            </Link>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

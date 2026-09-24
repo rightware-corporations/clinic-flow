@@ -34,7 +34,7 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Painel de Administração</h1>
-            <p className="text-muted-foreground text-sm">Visão geral da clínica</p>
+            <p className="text-muted-foreground text-sm">Demonstração — estatísticas e marcações fictícias</p>
           </div>
         </div>
 

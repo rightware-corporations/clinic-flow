@@ -44,6 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { logout as serverLogout } from "@/lib/clinicflow-api";
 
 interface MegaCategory {
   label: string;
@@ -210,12 +211,18 @@ export default function Navbar() {
     return routes[user.role] || "/paciente";
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    window.dispatchEvent(new Event("auth-change"));
-    toast.success("Sessão terminada com sucesso");
-    navigate("/");
-    setLogoutOpen(false);
+  const handleLogout = async () => {
+    try {
+      await serverLogout();
+      localStorage.removeItem("user"); // display cache only, never authorization
+      sessionStorage.removeItem("clinicflow:tenant");
+      window.dispatchEvent(new Event("auth-change"));
+      toast.success("Sessão terminada com sucesso");
+      navigate("/");
+      setLogoutOpen(false);
+    } catch {
+      toast.error("Não foi possível terminar a sessão. Tente novamente.");
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;

@@ -101,8 +101,8 @@ export default function BookingPage() {
             <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="w-10 h-10 text-success" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Marcação Confirmada!</h1>
-            <p className="text-muted-foreground mb-6">Receberá um email de confirmação em breve.</p>
+            <h1 className="text-2xl font-bold mb-2">Simulação concluída</h1>
+            <p className="text-muted-foreground mb-6">Esta é uma demonstração: nenhuma marcação real foi criada e nenhum email foi enviado.</p>
             <div className="medical-card p-5 text-left space-y-3 mb-8">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Serviço</span>

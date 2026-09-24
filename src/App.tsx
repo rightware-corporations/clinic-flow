@@ -51,7 +51,7 @@ function AnimatedRoutes() {
         <Route path="/paciente" element={<ProtectedRoute allowedRoles={["paciente"]}><PatientDashboard /></ProtectedRoute>} />
         <Route path="/profissional" element={<ProtectedRoute allowedRoles={["profissional"]}><PractitionerDashboard /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/super" element={<ProtectedRoute allowedRoles={["admin"]}><SuperDashboard /></ProtectedRoute>} />
+        <Route path="/super" element={<ProtectedRoute allowedRoles={["platform"]}><SuperDashboard /></ProtectedRoute>} />
         <Route path="/staff" element={<ProtectedRoute allowedRoles={["staff"]}><StaffDashboard /></ProtectedRoute>} />
         <Route path="/interno" element={<ProtectedRoute allowedRoles={["interno"]}><InternDashboard /></ProtectedRoute>} />
         

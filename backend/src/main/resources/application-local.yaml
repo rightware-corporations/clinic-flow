@@ -1,0 +1,6 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+# Local-only override. Never enable profile "local" on Railway.
