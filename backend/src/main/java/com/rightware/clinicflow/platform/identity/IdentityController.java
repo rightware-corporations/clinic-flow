@@ -1,5 +1,8 @@
 package com.rightware.clinicflow.platform.identity;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -7,6 +10,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -45,6 +50,21 @@ public class IdentityController {
         return new Me(user.id(), user.email(), user.displayName(), memberships);
     }
 
+    @PutMapping("/api/v1/me")
+    public Me updateProfile(@Valid @RequestBody UpdateProfile input,
+                            Authentication authentication) {
+        int changed = jdbc.update("""
+            UPDATE users SET display_name = :name
+            WHERE lower(email) = lower(:email) AND enabled
+            """, Map.of("name", input.displayName().trim(),
+                "email", authentication.getName()));
+        if (changed == 0) {
+            throw new org.springframework.security.access.AccessDeniedException("Account disabled");
+        }
+        return me(authentication);
+    }
+
+    public record UpdateProfile(@NotBlank @Size(max=160) String displayName) {}
     public record BasicUser(UUID id, String email, String displayName) {}
     public record Membership(UUID tenantId, String clinicName, String role) {}
     public record Me(UUID id, String email, String displayName,

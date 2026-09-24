@@ -1,6 +1,6 @@
 # ClinicFlow Backend — CF-B1 (in progress)
 
-**Status:** Foundation slice only. Not deployable with real patient data. Existing frontend login remains mocked until integration.
+**Status:** Foundation slice only. Not deployable with real patient data. Frontend login and route verification have been wired to the real session API on the foundation branch; the remaining clinical pages still contain mock/demo content and must not be deployed with real patient data.
 
 ## Stack
 - Java 21, Spring Boot 4.1.1, Maven, Spring Security
@@ -59,7 +59,7 @@ Deploy backend from repository subdirectory `/backend`, install Java 21 and Mave
 **Important:** initial login uses in-memory HTTP sessions and same-origin frontend proxy. Do not horizontally scale or expose cross-site frontend until shared session strategy and domain routing have been finalized. Railway project, credentials, costs, DNS, and privacy review remain pending. Never use production patient data during this phase.
 
 ## Pending slices
-- Migrate LoginPage + ProtectedRoute to real session APIs.
+- Validate real LoginPage + ProtectedRoute end-to-end against a live backend; public registration was disabled.
 - Patients CRUD with care-relationship access.
 - Scheduling, appointment transaction/conflict constraints.
 - Clinical reports, immutable finalization and correction history.

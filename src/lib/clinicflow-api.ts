@@ -71,6 +71,16 @@ export async function tenantMutation<T>(
   }));
 }
 
+export async function updateProfile(displayName: string): Promise<CurrentUser> {
+  if (!csrf) await refreshCsrf();
+  return readJson<CurrentUser>(await fetch("/api/v1/me", {
+    method: "PUT",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", [csrf!.header]: csrf!.token },
+    body: JSON.stringify({ displayName }),
+  }));
+}
+
 export async function logout(): Promise<void> {
   await refreshCsrf();
   await readJson(await fetch("/api/v1/auth/logout", {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { logout as serverLogout, updateProfile } from "@/lib/clinicflow-api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   AlertDialog,
@@ -40,26 +41,35 @@ export default function ProfilePage() {
     }
   }, [navigate]);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setIsSaving(true);
-    setTimeout(() => {
-      if (user) {
-        const updatedUser = { ...user, name };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        window.dispatchEvent(new Event("auth-change"));
-        setUser(updatedUser);
-        toast.success("Perfil atualizado com sucesso!");
-      }
+    try {
+      const current = await updateProfile(name);
+      const updatedUser = { ...user, name: current.displayName, email: current.email };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event("auth-change"));
+      setUser(updatedUser);
+      toast.success("Perfil actualizado");
+    } catch {
+      toast.error("Não foi possível actualizar o perfil");
+    } finally {
       setIsSaving(false);
-    }, 600);
+    }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    window.dispatchEvent(new Event("auth-change"));
-    toast.success("Sessão terminada com sucesso");
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await serverLogout();
+      localStorage.removeItem("user");
+      sessionStorage.removeItem("clinicflow:tenant");
+      window.dispatchEvent(new Event("auth-change"));
+      toast.success("Sessão terminada com sucesso");
+      navigate("/");
+    } catch {
+      toast.error("Não foi possível terminar a sessão. Tente novamente.");
+    }
   };
 
   const getRoleLabel = (role: string) => {

@@ -31,10 +31,10 @@ The existing frontend has not yet been migrated or exhaustively tested.
 - Audit events for domain mutations in the same transaction.
 - PostgreSQL integration tests for isolation and uniqueness.
 - CI workflow for frontend and backend.
-- Vite development reverse proxy, no Docker.
+- Vite development reverse proxy, real LoginPage + ProtectedRoute, server-side profile update, no Docker.
 
 ## Incomplete / blocking
-- NOT production-ready: existing frontend login and route permissions are still mocked.
+- NOT production-ready: frontend session integration is implemented but requires manual end-to-end smoke tests; all clinical dashboards and medical reports still use demonstration data.
 - No per-clinic onboarding, staff invitations, patient or appointment CRUD yet.
 - No scheduling concurrency tests or clinical data storage yet.
 - Full security, cookie domain, rate limits and Railway deployment not tested.
@@ -42,7 +42,7 @@ The existing frontend has not yet been migrated or exhaustively tested.
 
 ## Next mission
 1. Resolve any CI failures in this foundation PR.
-2. Replace frontend fake auth and ProtectedRoute with real session + /me memberships.
+2. Run and verify the wired frontend login, route protection, logout and profile edit against the local backend.
 3. Validate real end-to-end login and tenant-specific dashboards.
 4. Implement authorised patients CRUD, then services/professionals and scheduling.
 5. Persist actual PASS/FAIL/NOT RUN gates and update this handoff every slice.
