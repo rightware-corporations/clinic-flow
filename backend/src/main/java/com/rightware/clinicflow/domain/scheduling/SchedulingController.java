@@ -231,12 +231,13 @@ public class SchedulingController {
             Duration serviceDuration=Duration.ofMinutes(duration);
             Duration interval=Duration.ofMinutes(rule.slotIntervalMinutes());
             while(!cursor.plus(serviceDuration).isAfter(boundary)){
-                LocalDateTime end=cursor.plus(serviceDuration);
+                LocalDateTime slotStart=cursor;
+                LocalDateTime end=slotStart.plus(serviceDuration);
                 boolean blocked=dayBlocks.stream().anyMatch(b->
-                    cursor.isBefore(b.endsAt()) && end.isAfter(b.startsAt()));
+                    slotStart.isBefore(b.endsAt()) && end.isAfter(b.startsAt()));
                 if(!blocked){
-                    String key=cursor.toLocalTime()+"|"+rule.unitId();
-                    slots.putIfAbsent(key,new SlotView(cursor.toLocalTime(),end.toLocalTime(),rule.unitId()));
+                    String key=slotStart.toLocalTime()+"|"+rule.unitId();
+                    slots.putIfAbsent(key,new SlotView(slotStart.toLocalTime(),end.toLocalTime(),rule.unitId()));
                 }
                 cursor=cursor.plus(interval);
             }
