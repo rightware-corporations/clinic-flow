@@ -57,6 +57,7 @@ function getMenuItems(role: string): NavItem[] {
       return [
         { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
         { label: "Pacientes", href: "/pacientes", icon: Users },
+        { label: "Profissionais", href: "/profissionais", icon: Building2 },
         { label: "Relatórios", href: "/relatorios", icon: FileText },
         { label: "Agendamentos", href: "/agendar", icon: Calendar },
         ...common,

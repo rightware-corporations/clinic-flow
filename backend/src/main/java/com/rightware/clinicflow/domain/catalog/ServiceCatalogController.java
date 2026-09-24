@@ -86,6 +86,15 @@ public class ServiceCatalogController {
     public ServiceDefinition deactivate(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                         @PathVariable UUID id, Authentication auth) {
         var actor = tenancy.requireClinicAdmin(auth, tenant);
+        Integer assigned = jdbc.queryForObject("""
+            SELECT count(*) FROM practitioner_services ps
+            JOIN practitioner_profiles pp ON pp.tenant_id=ps.tenant_id
+                AND pp.user_id=ps.practitioner_user_id
+            WHERE ps.tenant_id=:tenant AND ps.service_id=:id AND pp.active
+            """, Map.of("tenant", tenant, "id", id), Integer.class);
+        if (assigned != null && assigned > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "SERVICE_IN_USE");
+        }
         int updated = jdbc.update("""
             UPDATE service_definitions SET active = false
             WHERE tenant_id = :tenant AND id = :id AND active

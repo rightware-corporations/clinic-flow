@@ -82,6 +82,15 @@ public class ClinicUnitController {
     public ClinicUnit deactivate(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                  @PathVariable UUID id, Authentication auth) {
         var actor = tenancy.requireClinicAdmin(auth, tenant);
+        Integer assigned = jdbc.queryForObject("""
+            SELECT count(*) FROM practitioner_units pu
+            JOIN practitioner_profiles pp ON pp.tenant_id=pu.tenant_id
+                AND pp.user_id=pu.practitioner_user_id
+            WHERE pu.tenant_id=:tenant AND pu.unit_id=:id AND pp.active
+            """, Map.of("tenant", tenant, "id", id), Integer.class);
+        if (assigned != null && assigned > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "CLINIC_UNIT_IN_USE");
+        }
         // Once appointments exist, block deactivation when future appointments are pending.
         int updated = jdbc.update("""
             UPDATE clinic_units SET active = false
