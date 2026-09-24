@@ -47,5 +47,17 @@ public class TenantAccessService {
         return access;
     }
 
+    /**
+     * Demographic registry V1 is limited to clinic administrator and reception.
+     * Practitioners/interns require a verified care relationship (future slice).
+     */
+    public TenantAccess requirePatientRegistryAccess(Authentication auth, UUID tenantId) {
+        TenantAccess access = requireMembership(auth, tenantId);
+        if (!access.role().equals("CLINIC_ADMIN") && !access.role().equals("RECEPTION")) {
+            throw new AccessDeniedException("Patient registry access requires clinic admin or reception");
+        }
+        return access;
+    }
+
     public record TenantAccess(UUID userId, UUID tenantId, String role) {}
 }
