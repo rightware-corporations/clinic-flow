@@ -278,14 +278,24 @@ public class SchedulingController {
     private void rejectOverlappingRule(UUID tenant,UUID ignoreId,AvailabilityRuleInput input){
         var params=new MapSqlParameterSource().addValue("tenant",tenant)
             .addValue("user",input.practitionerUserId()).addValue("day",input.dayOfWeek())
-            .addValue("start",input.startTime()).addValue("end",input.endTime())
-            .addValue("ignore",ignoreId);
-        Integer count=jdbc.queryForObject("""
-            SELECT count(*) FROM practitioner_availability_rules
-            WHERE tenant_id=:tenant AND practitioner_user_id=:user AND day_of_week=:day
-              AND active AND (:ignore IS NULL OR id<>:ignore)
-              AND start_time < :end AND end_time > :start
-            """,params,Integer.class);
+            .addValue("start",input.startTime()).addValue("end",input.endTime());
+        String sql;
+        if(ignoreId==null){
+            sql="""
+                SELECT count(*) FROM practitioner_availability_rules
+                WHERE tenant_id=:tenant AND practitioner_user_id=:user AND day_of_week=:day
+                  AND active AND start_time < :end AND end_time > :start
+                """;
+        }else{
+            params.addValue("ignore",ignoreId);
+            sql="""
+                SELECT count(*) FROM practitioner_availability_rules
+                WHERE tenant_id=:tenant AND practitioner_user_id=:user AND day_of_week=:day
+                  AND active AND id<>:ignore
+                  AND start_time < :end AND end_time > :start
+                """;
+        }
+        Integer count=jdbc.queryForObject(sql,params,Integer.class);
         if(count!=null&&count>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"OVERLAPPING_AVAILABILITY_RULE");
     }
 
