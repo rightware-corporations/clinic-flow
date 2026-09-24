@@ -15,8 +15,7 @@ CREATE TABLE patients (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     archived_at TIMESTAMPTZ,
     archived_by UUID REFERENCES users(id),
-    CONSTRAINT pk_patients PRIMARY KEY (tenant_id, id),
-    CONSTRAINT chk_patients_birth_date CHECK (date_of_birth <= CURRENT_DATE)
+    CONSTRAINT pk_patients PRIMARY KEY (tenant_id, id)
 );
 
 CREATE INDEX ix_patients_name_active

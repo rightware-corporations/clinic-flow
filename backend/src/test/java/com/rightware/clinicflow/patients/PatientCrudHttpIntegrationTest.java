@@ -1,6 +1,5 @@
 package com.rightware.clinicflow.patients;
 
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -42,8 +41,10 @@ class PatientCrudHttpIntegrationTest {
             .andExpect(jsonPath("$.version").value(0))
             .andReturn().getResponse().getContentAsString();
 
-        String id = new com.fasterxml.jackson.databind.ObjectMapper()
-            .readTree(created).get("id").asText();
+        UUID patientId = jdbc.queryForObject("""
+            SELECT id FROM patients WHERE tenant_id = :tenant AND name = :name
+            """, Map.of("tenant", f.tenantA(), "name", "Maria Teste"), UUID.class);
+        String id = patientId.toString();
 
         mvc.perform(get("/api/v1/patients").session(session)
                 .header("X-Clinicflow-Tenant", f.tenantA()).param("query", "Maria"))
@@ -74,7 +75,8 @@ class PatientCrudHttpIntegrationTest {
         mvc.perform(post("/api/v1/patients/" + id + "/archive").session(session).with(csrf())
                 .header("X-Clinicflow-Tenant", f.tenantA()).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"version\":1}"))
-            .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.archived").value(true));
 
         mvc.perform(get("/api/v1/patients/" + id).session(session)
                 .header("X-Clinicflow-Tenant", f.tenantA()))

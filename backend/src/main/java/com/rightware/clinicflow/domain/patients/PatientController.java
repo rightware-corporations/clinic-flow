@@ -121,7 +121,7 @@ public class PatientController {
 
     @PostMapping("/{id}/archive")
     @Transactional
-    public void archive(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
+    public Map<String, Boolean> archive(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                         @PathVariable UUID id, @Valid @RequestBody ArchiveInput input,
                         Authentication authentication) {
         var actor = tenants.requireClinicAdmin(authentication, tenant);
@@ -134,6 +134,7 @@ public class PatientController {
                 "version", input.version()));
         if (changed == 0) notFoundOrConflict(tenant, id);
         audit.write(tenant, actor.userId(), "PATIENT_ARCHIVED", "Patient", id);
+        return Map.of("archived", true);
     }
 
     private void notFoundOrConflict(UUID tenant, UUID id) {
