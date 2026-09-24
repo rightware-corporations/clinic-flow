@@ -79,6 +79,67 @@ class PractitionerCatalogHttpIntegrationTest {
             .andExpect(jsonPath("$[0].userId").value(practitioner.toString()));
     }
 
+
+    @Test
+    void profilePrivacyAndActiveAssignmentGuardsAreEnforced() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        UUID admin = createUser(tenant, "CLINIC_ADMIN");
+        UUID owner = createUser(tenant, "PRACTITIONER");
+        UUID other = createUser(tenant, "PRACTITIONER");
+        UUID specialty = UUID.randomUUID();
+        UUID unit = unit(tenant, "Central");
+        UUID service = service(tenant, "consulta-geral");
+
+        jdbc.update("""
+            INSERT INTO specialties(id,tenant_id,name,code)
+            VALUES(:id,:tenant,'Cardiologia',:code)
+            """, Map.of("id", specialty, "tenant", tenant, "code", "cardio-" + specialty));
+        jdbc.update("""
+            INSERT INTO practitioner_profiles(tenant_id,user_id,specialty_id)
+            VALUES(:tenant,:user,:specialty)
+            """, Map.of("tenant", tenant, "user", owner, "specialty", specialty));
+        jdbc.update("""
+            INSERT INTO practitioner_units(tenant_id,practitioner_user_id,unit_id)
+            VALUES(:tenant,:user,:unit)
+            """, Map.of("tenant",tenant,"user",owner,"unit",unit));
+        jdbc.update("""
+            INSERT INTO practitioner_services(tenant_id,practitioner_user_id,service_id)
+            VALUES(:tenant,:user,:service)
+            """, Map.of("tenant",tenant,"user",owner,"service",service));
+
+        mvc.perform(get("/api/v1/practitioners/" + owner)
+                .with(user(email(owner))).header("X-Clinicflow-Tenant", tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.userId").value(owner.toString()));
+        mvc.perform(get("/api/v1/practitioners")
+                .with(user(email(owner))).header("X-Clinicflow-Tenant", tenant))
+            .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/practitioners/" + other)
+                .with(user(email(owner))).header("X-Clinicflow-Tenant", tenant))
+            .andExpect(status().isForbidden());
+
+        mvc.perform(post("/api/v1/specialties/" + specialty + "/deactivate")
+                .with(user(email(admin))).with(csrf())
+                .header("X-Clinicflow-Tenant", tenant))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.error").value("SPECIALTY_IN_USE"));
+        mvc.perform(post("/api/v1/clinic-units/" + unit + "/deactivate")
+                .with(user(email(admin))).with(csrf())
+                .header("X-Clinicflow-Tenant", tenant))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.error").value("CLINIC_UNIT_IN_USE"));
+        mvc.perform(post("/api/v1/services/" + service + "/deactivate")
+                .with(user(email(admin))).with(csrf())
+                .header("X-Clinicflow-Tenant", tenant))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.error").value("SERVICE_IN_USE"));
+
+        mvc.perform(get("/api/v1/practitioners/eligible-members")
+                .with(user(email(admin))).header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].userId").value(other.toString()));
+    }
+
     private UUID createUser(UUID tenant, String role) {
         ensureTenant(tenant);
         UUID id = UUID.randomUUID();

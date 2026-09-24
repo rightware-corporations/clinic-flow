@@ -311,7 +311,7 @@ export default function AdminProfessionalsPage() {
               <div className="grid sm:grid-cols-2 gap-3">
                 {data?.units.filter(u=>u.active||profileDraft.unitIds.includes(u.id)).map(unit=>
                   <div className="flex items-center gap-2" key={unit.id}>
-                    <Checkbox id={"unit-"+unit.id} disabled={!unit.active}
+                    <Checkbox id={"unit-"+unit.id} disabled={!unit.active && !profileDraft.unitIds.includes(unit.id)}
                       checked={profileDraft.unitIds.includes(unit.id)}
                       onCheckedChange={checked=>setProfileDraft({...profileDraft,
                         unitIds:selectedIds(profileDraft.unitIds,unit.id,checked===true)})}/>
@@ -327,7 +327,7 @@ export default function AdminProfessionalsPage() {
               <div className="grid sm:grid-cols-2 gap-3">
                 {data?.services.filter(s=>s.active||profileDraft.serviceIds.includes(s.id)).map(service=>
                   <div className="flex items-center gap-2" key={service.id}>
-                    <Checkbox id={"service-"+service.id} disabled={!service.active}
+                    <Checkbox id={"service-"+service.id} disabled={!service.active && !profileDraft.serviceIds.includes(service.id)}
                       checked={profileDraft.serviceIds.includes(service.id)}
                       onCheckedChange={checked=>setProfileDraft({...profileDraft,
                         serviceIds:selectedIds(profileDraft.serviceIds,service.id,checked===true)})}/>

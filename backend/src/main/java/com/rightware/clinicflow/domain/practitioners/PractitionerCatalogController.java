@@ -98,6 +98,13 @@ public class PractitionerCatalogController {
     public SpecialtyView deactivateSpecialty(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                              @PathVariable UUID id, Authentication auth) {
         var actor = tenants.requireClinicAdmin(auth, tenant);
+        Integer assigned = jdbc.queryForObject("""
+            SELECT count(*) FROM practitioner_profiles
+            WHERE tenant_id=:tenant AND specialty_id=:id AND active
+            """, Map.of("tenant", tenant, "id", id), Integer.class);
+        if (assigned != null && assigned > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "SPECIALTY_IN_USE");
+        }
         int changed = jdbc.update("""
             UPDATE specialties SET active=false
             WHERE tenant_id=:tenant AND id=:id AND active
@@ -188,6 +195,7 @@ public class PractitionerCatalogController {
         if (input.version() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "VERSION_REQUIRED");
         }
+        requireEligiblePractitionerMembership(tenant, userId);
         validateAssignments(tenant, input);
         MapSqlParameterSource args = profileArgs(tenant, input).addValue("version", input.version());
         int changed = jdbc.update("""
@@ -267,9 +275,10 @@ public class PractitionerCatalogController {
 
     private void requireEligiblePractitionerMembership(UUID tenant, UUID userId) {
         Integer count = jdbc.queryForObject("""
-            SELECT count(*) FROM tenant_memberships
-            WHERE tenant_id=:tenant AND user_id=:user AND active
-              AND role IN ('PRACTITIONER','INTERN')
+            SELECT count(*) FROM tenant_memberships m
+            JOIN users u ON u.id = m.user_id
+            WHERE m.tenant_id=:tenant AND m.user_id=:user AND m.active AND u.enabled
+              AND m.role IN ('PRACTITIONER','INTERN')
             """, Map.of("tenant", tenant, "user", userId), Integer.class);
         if (count == null || count == 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "PRACTITIONER_MEMBERSHIP_REQUIRED");
