@@ -88,10 +88,13 @@ export default function AdminProfessionalsPage() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: (action: PendingAction) =>
-      action.kind === "professional"
-        ? setProfessionalActive(action.target.userId,action.target.version,action.nextActive)
-        : setSpecialtyActive(action.target.id,action.nextActive),
+    mutationFn: async (action: PendingAction): Promise<void> => {
+      if (action.kind === "professional") {
+        await setProfessionalActive(action.target.userId, action.target.version, action.nextActive);
+      } else {
+        await setSpecialtyActive(action.target.id, action.nextActive);
+      }
+    },
     onSuccess: () => {toast.success("Estado actualizado");setPendingAction(null);void refresh();},
     onError: (error: Error) => {
       toast.error(error.message.includes("409")
