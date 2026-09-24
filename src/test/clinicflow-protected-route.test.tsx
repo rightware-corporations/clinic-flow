@@ -34,3 +34,26 @@ describe("verified route authorization", () => {
     expect(screen.queryByText("Protected Admin Screen")).toBeNull();
   });
 });
+
+
+describe("patient-registry route policy", () => {
+  it("does not allow PRACTITIONER through an admin/staff patient-registry route", async () => {
+    vi.mocked(me).mockResolvedValue({
+      id: "practitioner-1", email: "doctor@example.test", displayName: "Doctor",
+      memberships: [{ tenantId: "tenant-1", clinicName: "Clinic", role: "PRACTITIONER" }],
+    });
+    render(
+      <MemoryRouter initialEntries={["/pacientes"]}>
+        <Routes>
+          <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <span>Patient Registry</span>
+          </ProtectedRoute>} />
+          <Route path="/profissional" element={<span>Practitioner Screen</span>} />
+          <Route path="/login" element={<span>Login</span>} />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(await screen.findByText("Practitioner Screen")).toBeInTheDocument();
+    expect(screen.queryByText("Patient Registry")).toBeNull();
+  });
+});

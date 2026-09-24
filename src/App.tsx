@@ -57,8 +57,8 @@ function AnimatedRoutes() {
         
         {/* Medical system — doctors, staff, admins, interns (read-only) */}
         <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["profissional", "admin", "interno"]}><MedicalReportsPage /></ProtectedRoute>} />
-        <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["profissional", "admin", "staff", "interno"]}><PatientsListPage /></ProtectedRoute>} />
-        <Route path="/pacientes/:id" element={<ProtectedRoute allowedRoles={["profissional", "admin", "staff", "interno"]}><PatientProfilePage /></ProtectedRoute>} />
+        <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientsListPage /></ProtectedRoute>} />
+        <Route path="/pacientes/:id" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientProfilePage /></ProtectedRoute>} />
         
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>

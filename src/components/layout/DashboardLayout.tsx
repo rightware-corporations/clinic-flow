@@ -56,7 +56,6 @@ function getMenuItems(role: string): NavItem[] {
     case "admin":
       return [
         { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-        { label: "Pacientes", href: "/pacientes", icon: Users },
         { label: "Relatórios", href: "/relatorios", icon: FileText },
         { label: "Agendamentos", href: "/agendar", icon: Calendar },
         ...common,
@@ -78,7 +77,6 @@ function getMenuItems(role: string): NavItem[] {
     case "interno":
       return [
         { label: "Dashboard", href: "/interno", icon: LayoutDashboard },
-        { label: "Pacientes", href: "/pacientes", icon: Users },
         { label: "Relatórios", href: "/relatorios", icon: BookOpen },
         ...common,
       ];
