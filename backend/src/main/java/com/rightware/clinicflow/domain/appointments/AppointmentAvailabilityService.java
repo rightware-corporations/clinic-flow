@@ -20,8 +20,21 @@ public class AppointmentAvailabilityService {
         this.jdbc=jdbc;
     }
 
+    /**
+     * Must run inside caller's transaction. Serialises bookings and block creation
+     * for the same professional; GiST exclusion remains the final conflict guard.
+     */
+    @org.springframework.transaction.annotation.Transactional(
+        propagation=org.springframework.transaction.annotation.Propagation.MANDATORY)
     public LocalDateTime requireSlot(UUID tenant, UUID patient, UUID practitioner,
                                      UUID unit, UUID service, LocalDateTime start) {
+        List<UUID> locked=jdbc.queryForList("""
+            SELECT user_id FROM practitioner_profiles
+            WHERE tenant_id=:tenant AND user_id=:professional FOR UPDATE
+            """,Map.of("tenant",tenant,"professional",practitioner),UUID.class);
+        if(locked.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ACTIVE_PRACTITIONER_REQUIRED");
+        }
         LocalDate now=LocalDate.now();
         if (start.toLocalDate().isBefore(now) ||
             start.toLocalDate().isAfter(now.plusDays(180))) {

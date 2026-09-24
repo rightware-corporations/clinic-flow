@@ -61,6 +61,20 @@ public class AppointmentController {
 
         LocalDateTime end=availability.requireSlot(tenant,input.patientId(),
             input.practitionerUserId(),input.unitId(),input.serviceId(),input.startsAt());
+        // The first idempotency read may race another request. Once the
+        // practitioner's row lock is held, repeat the check after its commit.
+        prior=jdbc.query("""
+            SELECT id,request_hash FROM appointments
+            WHERE tenant_id=:tenant AND created_by=:actor AND idempotency_key=:key
+            """,Map.of("tenant",tenant,"actor",actor.userId(),"key",idempotencyKey),
+            (rs,row)->new ExistingRequest(rs.getObject("id",UUID.class),
+                rs.getString("request_hash").trim()));
+        if(!prior.isEmpty()){
+            if(!prior.getFirst().hash().equals(hash)){
+                throw new ResponseStatusException(HttpStatus.CONFLICT,"IDEMPOTENCY_KEY_REUSED");
+            }
+            return find(tenant,prior.getFirst().id());
+        }
         UUID id=UUID.randomUUID();
         jdbc.update("""
             INSERT INTO appointments

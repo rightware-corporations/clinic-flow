@@ -32,12 +32,12 @@ CREATE TABLE appointments (
         tenant_id WITH =,
         practitioner_user_id WITH =,
         tsrange(starts_at,ends_at,'[)') WITH &&
-    ) WHERE (status IN ('REQUESTED','CONFIRMED','IN_PROGRESS')),
+    ) WHERE (status <> 'CANCELLED'),
     CONSTRAINT ex_appointment_patient_no_overlap EXCLUDE USING gist (
         tenant_id WITH =,
         patient_id WITH =,
         tsrange(starts_at,ends_at,'[)') WITH &&
-    ) WHERE (status IN ('REQUESTED','CONFIRMED','IN_PROGRESS'))
+    ) WHERE (status <> 'CANCELLED')
 );
 
 CREATE INDEX ix_appointments_calendar

@@ -38,6 +38,24 @@ class AppointmentHttpIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(id.toString()));
         assertEquals(1,countAppointments(f.tenant()));
+        mvc.perform(get("/api/v1/scheduling/slot-preview")
+                .with(user(email(f.admin())))
+                .header("X-Clinicflow-Tenant",f.tenant())
+                .param("practitionerUserId",f.practitioner().toString())
+                .param("serviceId",f.service().toString())
+                .param("date",at.toLocalDate().toString()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.slots.length()").value(5))
+            .andExpect(jsonPath("$.slots[0].startsAt").value("09:30:00"));
+        String blockedByBooking="""
+            {"practitionerUserId":"%s","startsAt":"%s","endsAt":"%s"}
+            """.formatted(f.practitioner(),at,at.plusMinutes(30));
+        mvc.perform(post("/api/v1/scheduling/blocks")
+                .with(user(email(f.admin()))).with(csrf())
+                .header("X-Clinicflow-Tenant",f.tenant())
+                .contentType(MediaType.APPLICATION_JSON).content(blockedByBooking))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.error").value("BLOCK_CONFLICTS_WITH_APPOINTMENT"));
 
         create(f,f.patient(),at,UUID.randomUUID())
             .andExpect(status().isConflict())
@@ -141,6 +159,29 @@ class AppointmentHttpIntegrationTest {
             go.countDown();
             int codeA=a.get(15,TimeUnit.SECONDS),codeB=b.get(15,TimeUnit.SECONDS);
             assertEquals(Set.of(201,409),Set.of(codeA,codeB));
+            assertEquals(1,countAppointments(f.tenant()));
+        }finally{go.countDown();executor.shutdownNow();}
+    }
+
+    @Test
+    void concurrentIdenticalIdempotencyKeyCreatesExactlyOneAppointment() throws Exception {
+        Fixture f=fixture();
+        LocalDateTime at=LocalDateTime.of(LocalDate.now().plusDays(5),LocalTime.of(9,0));
+        UUID key=UUID.randomUUID();
+        ExecutorService executor=Executors.newFixedThreadPool(2);
+        CountDownLatch ready=new CountDownLatch(2);
+        CountDownLatch go=new CountDownLatch(1);
+        try {
+            Callable<Integer> same=()->{
+                ready.countDown();
+                if(!go.await(5,TimeUnit.SECONDS))throw new IllegalStateException("race gate timeout");
+                return create(f,f.patient(),at,key).andReturn().getResponse().getStatus();
+            };
+            Future<Integer> a=executor.submit(same),b=executor.submit(same);
+            assertTrue(ready.await(5,TimeUnit.SECONDS));
+            go.countDown();
+            assertEquals(201,a.get(15,TimeUnit.SECONDS));
+            assertEquals(201,b.get(15,TimeUnit.SECONDS));
             assertEquals(1,countAppointments(f.tenant()));
         }finally{go.countDown();executor.shutdownNow();}
     }
