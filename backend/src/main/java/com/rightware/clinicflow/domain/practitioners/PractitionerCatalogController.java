@@ -91,6 +91,26 @@ public class PractitionerCatalogController {
         return specialty(tenant, id);
     }
 
+    @GetMapping("/practitioners/eligible-members")
+    public List<EligibleMemberView> eligibleMembers(
+        @RequestHeader("X-Clinicflow-Tenant") UUID tenant, Authentication auth) {
+        tenants.requireClinicAdmin(auth, tenant);
+        return jdbc.query("""
+            SELECT u.id, u.display_name, u.email, m.role
+            FROM tenant_memberships m
+            JOIN users u ON u.id=m.user_id
+            LEFT JOIN practitioner_profiles p
+              ON p.tenant_id=m.tenant_id AND p.user_id=m.user_id
+            WHERE m.tenant_id=:tenant AND m.active AND u.enabled
+              AND m.role IN ('PRACTITIONER','INTERN')
+              AND p.user_id IS NULL
+            ORDER BY u.display_name
+            """, Map.of("tenant", tenant), (rs, row) ->
+            new EligibleMemberView(rs.getObject("id", UUID.class),
+                rs.getString("display_name"), rs.getString("email"),
+                rs.getString("role")));
+    }
+
     @GetMapping("/practitioners")
     public List<PractitionerView> practitioners(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                                 Authentication auth) {
@@ -311,6 +331,7 @@ public class PractitionerCatalogController {
         @NotBlank @Size(max=80)
         @Pattern(regexp="^[a-z0-9]+(?:-[a-z0-9]+)*$") String code) {}
     public record SpecialtyView(UUID id, String name, String code, boolean active) {}
+    public record EligibleMemberView(UUID userId, String displayName, String email, String role) {}
     public record VersionInput(@NotNull @Min(0) Long version) {}
     public record PractitionerInput(
         @NotNull UUID userId,

@@ -23,9 +23,9 @@ class PractitionerCatalogHttpIntegrationTest {
     @Test
     void adminBuildsProfessionalCatalogWithoutCrossTenantAssignments() throws Exception {
         UUID tenant = UUID.randomUUID(), other = UUID.randomUUID();
-        UUID admin = user(tenant, "CLINIC_ADMIN");
-        UUID practitioner = user(tenant, "PRACTITIONER");
-        UUID otherPractitioner = user(other, "PRACTITIONER");
+        UUID admin = createUser(tenant, "CLINIC_ADMIN");
+        UUID practitioner = createUser(tenant, "PRACTITIONER");
+        UUID otherPractitioner = createUser(other, "PRACTITIONER");
         UUID unit = unit(tenant, "Central");
         UUID otherUnit = unit(other, "Other");
         UUID service = service(tenant, "consulta-geral");
@@ -55,13 +55,14 @@ class PractitionerCatalogHttpIntegrationTest {
 
         String invalidCrossTenant = """
             {"userId":"%s","professionalTitle":"Médico",
-             "unitIds":["%s"],"serviceIds":[]}
+             "unitIds":["%s"],"serviceIds":[],"version":0}
             """.formatted(practitioner, otherUnit);
         mvc.perform(put("/api/v1/practitioners/" + practitioner)
                 .with(user(adminEmail)).with(csrf())
                 .header("X-Clinicflow-Tenant", tenant)
                 .contentType(MediaType.APPLICATION_JSON).content(invalidCrossTenant))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("INVALID_CLINIC_UNIT"));
 
         String wrongTenantUser = """
             {"userId":"%s","professionalTitle":"Médico","unitIds":[],"serviceIds":[]}
@@ -78,7 +79,7 @@ class PractitionerCatalogHttpIntegrationTest {
             .andExpect(jsonPath("$[0].userId").value(practitioner.toString()));
     }
 
-    private UUID user(UUID tenant, String role) {
+    private UUID createUser(UUID tenant, String role) {
         ensureTenant(tenant);
         UUID id = UUID.randomUUID();
         jdbc.update("""
