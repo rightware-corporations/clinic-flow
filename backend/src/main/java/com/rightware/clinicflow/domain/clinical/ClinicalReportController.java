@@ -63,6 +63,39 @@ public class ClinicalReportController {
         return new ReportPage(items,total==null?0:total,page,30);
     }
 
+    /**
+     * Minimal patient identity is disclosed only for appointments assigned to
+     * the verified clinician and eligible for a new report.
+     */
+    @GetMapping("/eligible-appointments")
+    @Transactional
+    public List<EligibleEncounter> eligibleAppointments(
+        @RequestHeader("X-Clinicflow-Tenant") UUID tenant,
+        Authentication authentication) {
+        var author=requireClinicalAuthor(authentication,tenant);
+        List<EligibleEncounter> items=jdbc.query("""
+            SELECT a.id,a.patient_id,p.name AS patient_name,
+                   a.starts_at,a.status,sd.name AS service_name
+            FROM appointments a
+            JOIN patients p ON p.tenant_id=a.tenant_id AND p.id=a.patient_id
+            JOIN service_definitions sd ON sd.tenant_id=a.tenant_id AND sd.id=a.service_id
+            WHERE a.tenant_id=:tenant AND a.practitioner_user_id=:author
+              AND a.status IN ('IN_PROGRESS','COMPLETED')
+              AND p.archived_at IS NULL
+              AND NOT EXISTS (
+                  SELECT 1 FROM clinical_reports r
+                  WHERE r.tenant_id=a.tenant_id
+                    AND r.appointment_id=a.id AND r.author_id=:author)
+            ORDER BY a.starts_at DESC,a.id LIMIT 100
+            """,Map.of("tenant",tenant,"author",author.userId()),(rs,row)->
+            new EligibleEncounter(rs.getObject("id",UUID.class),
+                rs.getObject("patient_id",UUID.class),rs.getString("patient_name"),
+                rs.getObject("starts_at",java.time.LocalDateTime.class),
+                rs.getString("status"),rs.getString("service_name")));
+        audit.write(tenant,author.userId(),"ELIGIBLE_ENCOUNTERS_READ","Organization",tenant);
+        return items;
+    }
+
     @GetMapping("/{id}")
     @Transactional
     public ReportDetail get(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
@@ -333,6 +366,8 @@ public class ClinicalReportController {
     public record ReportSummary(UUID id,UUID appointmentId,UUID patientId,
         String patientName,String reportType,String status,long version,
         OffsetDateTime createdAt,OffsetDateTime updatedAt,OffsetDateTime finalizedAt) {}
+    public record EligibleEncounter(UUID id,UUID patientId,String patientName,
+        java.time.LocalDateTime startsAt,String status,String serviceName) {}
     public record ReportPage(List<ReportSummary> items,long total,int page,int size) {}
     public record AddendumView(UUID id,UUID reportId,UUID authorId,
         String content,OffsetDateTime createdAt) {}

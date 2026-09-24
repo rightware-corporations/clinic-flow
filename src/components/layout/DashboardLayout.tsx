@@ -21,7 +21,6 @@ import {
   ChevronRight,
   Menu,
   X,
-  BookOpen,
   Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,7 +57,7 @@ function getMenuItems(role: string): NavItem[] {
         { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
         { label: "Pacientes", href: "/pacientes", icon: Users },
         { label: "Profissionais", href: "/profissionais", icon: Building2 },
-        { label: "Relatórios", href: "/relatorios", icon: FileText },
+
         { label: "Agendamentos", href: "/marcacoes", icon: Calendar },
         ...common,
       ];
@@ -79,7 +78,7 @@ function getMenuItems(role: string): NavItem[] {
     case "interno":
       return [
         { label: "Dashboard", href: "/interno", icon: LayoutDashboard },
-        { label: "Relatórios", href: "/relatorios", icon: BookOpen },
+
         ...common,
       ];
     case "paciente":

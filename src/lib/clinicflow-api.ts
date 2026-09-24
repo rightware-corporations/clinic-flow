@@ -278,3 +278,85 @@ export function rescheduleAppointment(
     activeTenantId(), "POST", input,
   );
 }
+
+
+// CF-B6B: private clinical reports. Do not persist report content to browser storage.
+export type ClinicalReportType = "CONSULTATION" | "DIAGNOSTIC" | "FOLLOW_UP";
+export type ClinicalReportStatus = "DRAFT" | "FINALIZED";
+export type ClinicalReportSummary = {
+  id: string; appointmentId: string; patientId: string; patientName: string;
+  reportType: ClinicalReportType; status: ClinicalReportStatus; version: number;
+  createdAt: string; updatedAt: string; finalizedAt: string | null;
+};
+export type ClinicalReportPage = {
+  items: ClinicalReportSummary[]; total: number; page: number; size: number;
+};
+export type ClinicalAddendum = {
+  id: string; reportId: string; authorId: string; content: string; createdAt: string;
+};
+export type ClinicalReportDetail = {
+  summary: ClinicalReportSummary;
+  symptoms: string; diagnosis: string; observations: string; treatment: string; notes: string;
+  addenda: ClinicalAddendum[];
+};
+export type ClinicalReportInput = {
+  appointmentId: string; reportType: ClinicalReportType;
+  symptoms: string; diagnosis: string; observations: string;
+  treatment: string; notes: string; version?: number;
+};
+export type EligibleClinicalEncounter = {
+  id: string; patientId: string; patientName: string;
+  startsAt: string; status: "IN_PROGRESS" | "COMPLETED"; serviceName: string;
+};
+export function listClinicalReports(page = 0): Promise<ClinicalReportPage> {
+  return tenantGet<ClinicalReportPage>(
+    "/api/v1/clinical-reports?page=" + encodeURIComponent(page), activeTenantId(),
+  );
+}
+export function listEligibleClinicalEncounters(): Promise<EligibleClinicalEncounter[]> {
+  return tenantGet<EligibleClinicalEncounter[]>(
+    "/api/v1/clinical-reports/eligible-appointments", activeTenantId(),
+  );
+}
+export function getClinicalReport(id: string): Promise<ClinicalReportDetail> {
+  return tenantGet<ClinicalReportDetail>(
+    "/api/v1/clinical-reports/" + encodeURIComponent(id), activeTenantId(),
+  );
+}
+export function createClinicalReport(input: ClinicalReportInput): Promise<ClinicalReportDetail> {
+  return tenantMutation<ClinicalReportDetail>(
+    "/api/v1/clinical-reports", activeTenantId(), "POST", input,
+  );
+}
+export function updateClinicalReport(
+  id: string, input: ClinicalReportInput,
+): Promise<ClinicalReportDetail> {
+  return tenantMutation<ClinicalReportDetail>(
+    "/api/v1/clinical-reports/" + encodeURIComponent(id), activeTenantId(), "PUT", input,
+  );
+}
+export function finalizeClinicalReport(id: string, version: number): Promise<ClinicalReportDetail> {
+  return tenantMutation<ClinicalReportDetail>(
+    "/api/v1/clinical-reports/" + encodeURIComponent(id) + "/finalize",
+    activeTenantId(), "POST", { version },
+  );
+}
+export async function createClinicalAddendum(
+  id: string, content: string, idempotencyKey: string,
+): Promise<ClinicalAddendum> {
+  if (!csrf) await refreshCsrf();
+  return readJson<ClinicalAddendum>(await fetch(
+    "/api/v1/clinical-reports/" + encodeURIComponent(id) + "/addenda",
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "X-Clinicflow-Tenant": activeTenantId(),
+        "Idempotency-Key": idempotencyKey,
+        "Content-Type": "application/json",
+        [csrf!.header]: csrf!.token,
+      },
+      body: JSON.stringify({ content: content.trim() }),
+    },
+  ));
+}

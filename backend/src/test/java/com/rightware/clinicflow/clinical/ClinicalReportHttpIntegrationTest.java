@@ -29,6 +29,22 @@ class ClinicalReportHttpIntegrationTest {
     @Test
     void ownerOnlyDraftFinalizationAndImmutableAddendaAreEnforced() throws Exception {
         Fixture f=fixture();
+        mvc.perform(get("/api/v1/clinical-reports/eligible-appointments")
+                .with(user(email(f.practitioner())))
+                .header("X-Clinicflow-Tenant",f.tenant()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(f.appointment().toString()))
+            .andExpect(jsonPath("$[0].patientName").value("Clinical Test"));
+        mvc.perform(get("/api/v1/clinical-reports/eligible-appointments")
+                .with(user(email(f.otherPractitioner())))
+                .header("X-Clinicflow-Tenant",f.tenant()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/v1/clinical-reports/eligible-appointments")
+                .with(user(email(f.admin())))
+                .header("X-Clinicflow-Tenant",f.tenant()))
+            .andExpect(status().isForbidden());
+
         String draft=reportJson(f.appointment(),0,"Initial diagnosis");
 
         mvc.perform(post("/api/v1/clinical-reports")
@@ -44,6 +60,11 @@ class ClinicalReportHttpIntegrationTest {
             WHERE tenant_id=:tenant AND appointment_id=:appointment
             """,Map.of("tenant",f.tenant(),"appointment",f.appointment()),UUID.class);
         assertNotNull(report);
+        mvc.perform(get("/api/v1/clinical-reports/eligible-appointments")
+                .with(user(email(f.practitioner())))
+                .header("X-Clinicflow-Tenant",f.tenant()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
 
         // Administrative membership never grants access to clinical content.
         mvc.perform(get("/api/v1/clinical-reports/"+report)

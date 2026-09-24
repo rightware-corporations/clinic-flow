@@ -44,3 +44,10 @@ Railway staging: NOT RUN.
 - Add clinician encounter workflow and patient-care relationship history beyond
   a single appointment; supervisor access only after policy approval.
 - Finalize country/timezone, retention and legal compliance before production.
+
+## CF-B6B integration point
+- GET /api/v1/clinical-reports/eligible-appointments returns up to 100 started/completed
+  encounters with minimal patient identity, only to their assigned active clinician.
+- Existing reports are excluded; newly created originals bind the selected appointment
+  to the same tenant and author. No general patient registry access is granted.
+- GET is transactionally audited without content or query logging.
