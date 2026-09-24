@@ -64,6 +64,13 @@ class SchedulingHttpIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON).content(block))
             .andExpect(status().isCreated());
 
+        UUID receptionist=createUser(tenant,"RECEPTION");
+        mvc.perform(get("/api/v1/scheduling/slot-preview")
+                .with(user(email(receptionist))).header("X-Clinicflow-Tenant",tenant)
+                .param("practitionerUserId",practitioner.toString())
+                .param("serviceId",service.toString()).param("date",date.toString()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.slots.length()").value(3));
         mvc.perform(get("/api/v1/scheduling/slot-preview")
                 .with(user(adminEmail)).header("X-Clinicflow-Tenant",tenant)
                 .param("practitionerUserId",practitioner.toString())
