@@ -360,3 +360,62 @@ export async function createClinicalAddendum(
     },
   ));
 }
+
+
+// CF-B7: secure tenant invitations. Raw tokens are never stored in browser storage.
+export type InvitationRole = "RECEPTION" | "PRACTITIONER" | "INTERN";
+export type AdminInvitation = {
+  id: string; email: string; displayName: string; role: InvitationRole;
+  expiresAt: string; acceptedAt: string | null; revokedAt: string | null; createdAt: string;
+};
+export type CreatedInvitation = {
+  id: string; email: string; displayName: string; role: InvitationRole;
+  expiresAt: string; token: string;
+};
+export type PublicInvitation = {
+  displayName: string; email: string; role: InvitationRole;
+  clinicName: string; expiresAt: string; existingAccount: boolean;
+};
+export type AcceptedInvitation = { userId: string; tenantId: string; role: InvitationRole };
+
+export function listInvitations(): Promise<AdminInvitation[]> {
+  return tenantGet<AdminInvitation[]>("/api/v1/admin/invitations", activeTenantId());
+}
+export function createInvitation(input: {
+  email: string; displayName: string; role: InvitationRole;
+}): Promise<CreatedInvitation> {
+  return tenantMutation<CreatedInvitation>(
+    "/api/v1/admin/invitations", activeTenantId(), "POST", input,
+  );
+}
+export function revokeInvitation(id: string): Promise<AdminInvitation> {
+  return tenantMutation<AdminInvitation>(
+    "/api/v1/admin/invitations/" + encodeURIComponent(id) + "/revoke",
+    activeTenantId(), "POST",
+  );
+}
+export async function inspectInvitation(token: string): Promise<PublicInvitation> {
+  return readJson<PublicInvitation>(await fetch("/api/v1/auth/invitations/current", {
+    credentials: "same-origin",
+    headers: { "X-Clinicflow-Invitation": token },
+  }));
+}
+export async function acceptInvitation(
+  token: string,
+  input: { password?: string; existingAccountPassword?: string },
+): Promise<AcceptedInvitation> {
+  await refreshCsrf();
+  return readJson<AcceptedInvitation>(await fetch(
+    "/api/v1/auth/invitations/current/accept",
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "X-Clinicflow-Invitation": token,
+        "Content-Type": "application/json",
+        [csrf!.header]: csrf!.token,
+      },
+      body: JSON.stringify(input),
+    },
+  ));
+}
