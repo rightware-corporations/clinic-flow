@@ -31,8 +31,8 @@ class SecureInvitationHttpIntegrationTest {
     void newAccountInviteIsTenantScopedSingleUseCsrfProtectedAndRoleBound() throws Exception {
         UUID tenant=tenant("Invite Clinic");
         UUID other=tenant("Other Clinic");
-        UUID admin=user(tenant,"CLINIC_ADMIN","Admin",encoder.encode("Admin-Password-2026"));
-        UUID otherAdmin=user(other,"CLINIC_ADMIN","Other Admin",encoder.encode("Other-Admin-Password-2026"));
+        UUID admin=createUser(tenant,"CLINIC_ADMIN","Admin",encoder.encode("Admin-Password-2026"));
+        UUID otherAdmin=createUser(other,"CLINIC_ADMIN","Other Admin",encoder.encode("Other-Admin-Password-2026"));
         String adminEmail=email(admin);
 
         // Role escalation is impossible through invitation input.
@@ -115,7 +115,7 @@ class SecureInvitationHttpIntegrationTest {
     void existingAccountRequiresItsCurrentPasswordAndExpiredInviteCanBeReissued() throws Exception {
         UUID tenant=tenant("Target Clinic");
         UUID source=tenant("Source Clinic");
-        UUID admin=user(tenant,"CLINIC_ADMIN","Admin",encoder.encode("Admin-Password-2026"));
+        UUID admin=createUser(tenant,"CLINIC_ADMIN","Admin",encoder.encode("Admin-Password-2026"));
         String existingEmail="existing-user@example.invalid";
         String existingPassword="Existing-Account-Password-2026";
         UUID existing=userWithEmail(source,"PRACTITIONER","Existing User",
@@ -207,8 +207,9 @@ class SecureInvitationHttpIntegrationTest {
             Map.of("id",id,"name",name));
         return id;
     }
-    private UUID user(UUID tenant,String role,String name,String hash) {
-        return userWithEmail(tenant,role,name,email(UUID.randomUUID()),hash);
+    private UUID createUser(UUID tenant,String role,String name,String hash) {
+        return userWithEmail(tenant,role,name,
+            "invite-"+UUID.randomUUID()+"@example.invalid",hash);
     }
     private UUID userWithEmail(UUID tenant,String role,String name,String email,String hash) {
         UUID id=UUID.randomUUID();
@@ -223,7 +224,8 @@ class SecureInvitationHttpIntegrationTest {
         return id;
     }
     private String email(UUID id) {
-        return "invite-"+id+"@example.invalid";
+        return jdbc.queryForObject("SELECT email FROM users WHERE id=:id",
+            Map.of("id",id),String.class);
     }
     private String token(String body) {
         var match=TOKEN.matcher(body);
