@@ -25,6 +25,7 @@ import MedicalReportsPage from "./pages/MedicalReportsPage";
 import PatientProfilePage from "./pages/PatientProfilePage";
 import PatientsListPage from "./pages/PatientsListPage";
 import AdminProfessionalsPage from "./pages/AdminProfessionalsPage";
+import InternalAppointmentsPage from "./pages/InternalAppointmentsPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ function AnimatedRoutes() {
         <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["profissional", "admin", "interno"]}><MedicalReportsPage /></ProtectedRoute>} />
         <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientsListPage /></ProtectedRoute>} />
         <Route path="/profissionais" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProfessionalsPage /></ProtectedRoute>} />
+        <Route path="/marcacoes" element={<ProtectedRoute allowedRoles={["admin", "staff", "profissional"]}><InternalAppointmentsPage /></ProtectedRoute>} />
         <Route path="/pacientes/:id" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientProfilePage /></ProtectedRoute>} />
         
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />

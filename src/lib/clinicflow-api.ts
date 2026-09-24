@@ -1,4 +1,4 @@
-/** Preparatory real API client; old mock auth UI is not connected yet. */
+/** Typed same-origin API; Spring session + CSRF + verified tenant membership remain authoritative. */
 export type ClinicMembership = {
   tenantId: string;
   clinicName: string;
@@ -206,4 +206,75 @@ export function editProfessional(input: ProfessionalInput): Promise<Professional
 export function setProfessionalActive(userId: string, version: number, active: boolean): Promise<Professional> {
   return tenantMutation<Professional>("/api/v1/practitioners/" + encodeURIComponent(userId)
     + (active ? "/reactivate" : "/deactivate"), activeTenantId(), "POST", {version});
+}
+
+
+// CF-B5: INTERNAL appointment workflow. Public BookingPage remains a demo.
+export type BookableProfessional = {
+  userId: string; displayName: string;
+  professionalTitle: string | null; specialtyName: string | null;
+  unitIds: string[]; serviceIds: string[];
+};
+export type AppointmentStatus =
+  "REQUESTED" | "CONFIRMED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
+export type ClinicAppointment = {
+  id: string; patientId: string; practitionerUserId: string;
+  unitId: string; serviceId: string; startsAt: string; endsAt: string;
+  status: AppointmentStatus; version: number;
+  patientName: string; practitionerName: string; unitName: string; serviceName: string;
+};
+export type NewAppointment = {
+  patientId: string; practitionerUserId: string;
+  unitId: string; serviceId: string; startsAt: string;
+};
+export type AvailabilitySlot = { startsAt: string; endsAt: string; unitId: string };
+export type SlotPreview = {
+  date: string; practitionerUserId: string; serviceId: string;
+  serviceDurationMinutes: number; slots: AvailabilitySlot[];
+};
+export type AppointmentCommand = "confirm" | "start" | "complete" | "cancel" | "no-show";
+
+export function listBookableProfessionals(): Promise<BookableProfessional[]> {
+  return tenantGet<BookableProfessional[]>("/api/v1/practitioners/bookable", activeTenantId());
+}
+export function listAppointments(from: string, to: string): Promise<ClinicAppointment[]> {
+  const qs = new URLSearchParams({from,to});
+  return tenantGet<ClinicAppointment[]>("/api/v1/appointments?" + qs, activeTenantId());
+}
+export function getSlotPreview(
+  practitionerUserId: string, serviceId: string, date: string,
+): Promise<SlotPreview> {
+  const qs = new URLSearchParams({practitionerUserId,serviceId,date});
+  return tenantGet<SlotPreview>("/api/v1/scheduling/slot-preview?" + qs, activeTenantId());
+}
+export async function createAppointment(
+  input: NewAppointment, idempotencyKey: string,
+): Promise<ClinicAppointment> {
+  if (!csrf) await refreshCsrf();
+  return readJson<ClinicAppointment>(await fetch("/api/v1/appointments", {
+    method: "POST", credentials: "same-origin",
+    headers: {
+      "X-Clinicflow-Tenant": activeTenantId(),
+      "Idempotency-Key": idempotencyKey,
+      "Content-Type": "application/json",
+      [csrf!.header]: csrf!.token,
+    },
+    body: JSON.stringify(input),
+  }));
+}
+export function commandAppointment(
+  id: string, command: AppointmentCommand, version: number,
+): Promise<ClinicAppointment> {
+  return tenantMutation<ClinicAppointment>(
+    "/api/v1/appointments/" + encodeURIComponent(id) + "/" + command,
+    activeTenantId(), "POST", {version},
+  );
+}
+export function rescheduleAppointment(
+  id: string, input: {version: number; unitId: string; startsAt: string},
+): Promise<ClinicAppointment> {
+  return tenantMutation<ClinicAppointment>(
+    "/api/v1/appointments/" + encodeURIComponent(id) + "/reschedule",
+    activeTenantId(), "POST", input,
+  );
 }

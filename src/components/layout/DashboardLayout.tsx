@@ -59,12 +59,13 @@ function getMenuItems(role: string): NavItem[] {
         { label: "Pacientes", href: "/pacientes", icon: Users },
         { label: "Profissionais", href: "/profissionais", icon: Building2 },
         { label: "Relatórios", href: "/relatorios", icon: FileText },
-        { label: "Agendamentos", href: "/agendar", icon: Calendar },
+        { label: "Agendamentos", href: "/marcacoes", icon: Calendar },
         ...common,
       ];
     case "profissional":
       return [
-        { label: "Agenda", href: "/profissional", icon: LayoutDashboard },
+        { label: "Dashboard", href: "/profissional", icon: LayoutDashboard },
+        { label: "Agenda real", href: "/marcacoes", icon: Calendar },
         { label: "Relatórios", href: "/relatorios", icon: FileText },
         ...common,
       ];
@@ -72,7 +73,7 @@ function getMenuItems(role: string): NavItem[] {
       return [
         { label: "Dashboard", href: "/staff", icon: LayoutDashboard },
         { label: "Pacientes", href: "/pacientes", icon: Users },
-        { label: "Agendamentos", href: "/agendar", icon: Calendar },
+        { label: "Agendamentos", href: "/marcacoes", icon: Calendar },
         ...common,
       ];
     case "interno":

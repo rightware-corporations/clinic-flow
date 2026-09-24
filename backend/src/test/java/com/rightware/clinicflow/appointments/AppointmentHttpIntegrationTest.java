@@ -33,6 +33,13 @@ class AppointmentHttpIntegrationTest {
             .andExpect(jsonPath("$.status").value("REQUESTED"))
             .andExpect(jsonPath("$.version").value(0));
         UUID id=appointmentId(f.tenant(),key,f.admin());
+        mvc.perform(get("/api/v1/appointments/"+id)
+                .with(user(email(f.admin())))
+                .header("X-Clinicflow-Tenant",f.tenant()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.patientName").isNotEmpty())
+            .andExpect(jsonPath("$.practitionerName").isNotEmpty())
+            .andExpect(jsonPath("$.serviceName").value("Consultation"));
 
         create(f,f.patient(),at,key)
             .andExpect(status().isCreated())

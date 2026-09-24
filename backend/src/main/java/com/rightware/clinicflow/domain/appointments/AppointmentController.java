@@ -97,6 +97,7 @@ public class AppointmentController {
     }
 
     @GetMapping
+    @Transactional
     public List<AppointmentView> list(
         @RequestHeader("X-Clinicflow-Tenant") UUID tenant,
         @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate from,
@@ -122,25 +123,35 @@ public class AppointmentController {
             .addValue("tenant",tenant).addValue("from",from.atStartOfDay())
             .addValue("to",to.plusDays(1).atStartOfDay());
         String sql="""
-            SELECT id,patient_id,practitioner_user_id,unit_id,service_id,
-                   starts_at,ends_at,status,version
-            FROM appointments
-            WHERE tenant_id=:tenant AND starts_at>=:from AND starts_at<:to
+            SELECT a.id,a.patient_id,a.practitioner_user_id,a.unit_id,a.service_id,
+                   a.starts_at,a.ends_at,a.status,a.version,
+                   p.name AS patient_name,u.display_name AS practitioner_name,
+                   cu.name AS unit_name,sd.name AS service_name
+            FROM appointments a
+            JOIN patients p ON p.tenant_id=a.tenant_id AND p.id=a.patient_id
+            JOIN users u ON u.id=a.practitioner_user_id
+            JOIN clinic_units cu ON cu.tenant_id=a.tenant_id AND cu.id=a.unit_id
+            JOIN service_definitions sd ON sd.tenant_id=a.tenant_id AND sd.id=a.service_id
+            WHERE a.tenant_id=:tenant AND a.starts_at>=:from AND a.starts_at<:to
             """;
         if(professional!=null){
             params.addValue("professional",professional);
-            sql+=" AND practitioner_user_id=:professional";
+            sql+=" AND a.practitioner_user_id=:professional";
         }
-        sql+=" ORDER BY starts_at,id LIMIT 1000";
-        return jdbc.query(sql,params,(rs,row)->row(rs));
+        sql+=" ORDER BY a.starts_at,a.id LIMIT 1000";
+        List<AppointmentView> results=jdbc.query(sql,params,(rs,row)->row(rs));
+        audit.write(tenant,actor.userId(),"APPOINTMENT_CALENDAR_VIEWED","Organization",tenant);
+        return results;
     }
 
     @GetMapping("/{id}")
+    @Transactional
     public AppointmentView get(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                @PathVariable UUID id,Authentication auth){
         var actor=tenants.requireMembership(auth,tenant);
         var existing=find(tenant,id);
         requireCalendarAccess(actor,existing);
+        audit.write(tenant,actor.userId(),"APPOINTMENT_READ","Appointment",id);
         return existing;
     }
 
@@ -263,9 +274,16 @@ public class AppointmentController {
 
     private AppointmentView find(UUID tenant,UUID id){
         return jdbc.query("""
-            SELECT id,patient_id,practitioner_user_id,unit_id,service_id,
-                starts_at,ends_at,status,version
-            FROM appointments WHERE tenant_id=:tenant AND id=:id
+            SELECT a.id,a.patient_id,a.practitioner_user_id,a.unit_id,a.service_id,
+                a.starts_at,a.ends_at,a.status,a.version,
+                p.name AS patient_name,u.display_name AS practitioner_name,
+                cu.name AS unit_name,sd.name AS service_name
+            FROM appointments a
+            JOIN patients p ON p.tenant_id=a.tenant_id AND p.id=a.patient_id
+            JOIN users u ON u.id=a.practitioner_user_id
+            JOIN clinic_units cu ON cu.tenant_id=a.tenant_id AND cu.id=a.unit_id
+            JOIN service_definitions sd ON sd.tenant_id=a.tenant_id AND sd.id=a.service_id
+            WHERE a.tenant_id=:tenant AND a.id=:id
             """,Map.of("tenant",tenant,"id",id),(rs,n)->row(rs))
             .stream().findFirst().orElseThrow(()->
                 new ResponseStatusException(HttpStatus.NOT_FOUND,"APPOINTMENT_NOT_FOUND"));
@@ -316,7 +334,9 @@ public class AppointmentController {
             rs.getObject("unit_id",UUID.class),rs.getObject("service_id",UUID.class),
             rs.getObject("starts_at",LocalDateTime.class),
             rs.getObject("ends_at",LocalDateTime.class),
-            rs.getString("status"),rs.getLong("version"));
+            rs.getString("status"),rs.getLong("version"),
+            rs.getString("patient_name"),rs.getString("practitioner_name"),
+            rs.getString("unit_name"),rs.getString("service_name"));
     }
 
     private record ExistingRequest(UUID id,String hash){}
@@ -329,5 +349,6 @@ public class AppointmentController {
                                   @NotNull LocalDateTime startsAt){}
     public record AppointmentView(UUID id,UUID patientId,UUID practitionerUserId,
         UUID unitId,UUID serviceId,LocalDateTime startsAt,LocalDateTime endsAt,
-        String status,long version){}
+        String status,long version,
+        String patientName,String practitionerName,String unitName,String serviceName){}
 }
