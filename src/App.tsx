@@ -58,7 +58,7 @@ function AnimatedRoutes() {
         <Route path="/interno" element={<ProtectedRoute allowedRoles={["interno"]}><InternDashboard /></ProtectedRoute>} />
         
         {/* Medical system — doctors, staff, admins, interns (read-only) */}
-        <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["profissional", "admin", "interno"]}><MedicalReportsPage /></ProtectedRoute>} />
+        <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["profissional"]}><MedicalReportsPage /></ProtectedRoute>} />
         <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientsListPage /></ProtectedRoute>} />
         <Route path="/profissionais" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProfessionalsPage /></ProtectedRoute>} />
         <Route path="/marcacoes" element={<ProtectedRoute allowedRoles={["admin", "staff", "profissional"]}><InternalAppointmentsPage /></ProtectedRoute>} />
