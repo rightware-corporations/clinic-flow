@@ -134,6 +134,48 @@ public class PractitionerCatalogController {
                 rs.getString("role")));
     }
 
+    /**
+     * Booking directory contains no email, license number or biography.
+     * Reception can choose a professional without accessing personnel records.
+     */
+    @GetMapping("/practitioners/bookable")
+    public List<BookablePractitioner> bookablePractitioners(
+        @RequestHeader("X-Clinicflow-Tenant") UUID tenant, Authentication auth) {
+        var actor=tenants.requireMembership(auth,tenant);
+        if(!actor.role().equals("CLINIC_ADMIN") && !actor.role().equals("RECEPTION")) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                "Booking directory requires clinic administration or reception");
+        }
+        return jdbc.query("""
+            SELECT p.user_id,u.display_name,p.professional_title,s.name AS specialty_name
+            FROM practitioner_profiles p
+            JOIN users u ON u.id=p.user_id
+            JOIN tenant_memberships m ON m.tenant_id=p.tenant_id AND m.user_id=p.user_id
+            LEFT JOIN specialties s ON s.tenant_id=p.tenant_id AND s.id=p.specialty_id
+            WHERE p.tenant_id=:tenant AND p.active AND u.enabled AND m.active
+              AND m.role='PRACTITIONER'
+            ORDER BY u.display_name
+            """,Map.of("tenant",tenant),(rs,row)->{
+                UUID userId=rs.getObject("user_id",UUID.class);
+                Map<String,UUID> args=Map.of("tenant",tenant,"user",userId);
+                List<UUID> unitIds=jdbc.queryForList("""
+                    SELECT pu.unit_id FROM practitioner_units pu
+                    JOIN clinic_units cu ON cu.tenant_id=pu.tenant_id AND cu.id=pu.unit_id
+                    WHERE pu.tenant_id=:tenant AND pu.practitioner_user_id=:user
+                      AND cu.active ORDER BY pu.unit_id
+                    """,args,UUID.class);
+                List<UUID> serviceIds=jdbc.queryForList("""
+                    SELECT ps.service_id FROM practitioner_services ps
+                    JOIN service_definitions sd ON sd.tenant_id=ps.tenant_id AND sd.id=ps.service_id
+                    WHERE ps.tenant_id=:tenant AND ps.practitioner_user_id=:user
+                      AND sd.active ORDER BY ps.service_id
+                    """,args,UUID.class);
+                return new BookablePractitioner(userId,rs.getString("display_name"),
+                    rs.getString("professional_title"),rs.getString("specialty_name"),
+                    unitIds,serviceIds);
+            });
+    }
+
     @GetMapping("/practitioners")
     public List<PractitionerView> practitioners(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                                 Authentication auth) {
@@ -407,6 +449,9 @@ public class PractitionerCatalogController {
         @Pattern(regexp="^[a-z0-9]+(?:-[a-z0-9]+)*$") String code) {}
     public record SpecialtyView(UUID id, String name, String code, boolean active) {}
     public record EligibleMemberView(UUID userId, String displayName, String email, String role) {}
+    public record BookablePractitioner(UUID userId, String displayName,
+        String professionalTitle, String specialtyName,
+        List<UUID> unitIds, List<UUID> serviceIds) {}
     public record VersionInput(@NotNull @Min(0) Long version) {}
     public record PractitionerInput(
         @NotNull UUID userId,

@@ -73,6 +73,18 @@ class PractitionerCatalogHttpIntegrationTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("PRACTITIONER_MEMBERSHIP_REQUIRED"));
 
+        UUID receptionist=createUser(tenant,"RECEPTION");
+        mvc.perform(get("/api/v1/practitioners/bookable").with(user(email(receptionist)))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].userId").value(practitioner.toString()))
+            .andExpect(jsonPath("$[0].unitIds[0]").value(unit.toString()))
+            .andExpect(jsonPath("$[0].serviceIds[0]").value(service.toString()))
+            .andExpect(jsonPath("$[0].licenseNumber").doesNotExist())
+            .andExpect(jsonPath("$[0].email").doesNotExist());
+        mvc.perform(get("/api/v1/practitioners/bookable").with(user(email(practitioner)))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/practitioners").with(user(adminEmail))
                 .header("X-Clinicflow-Tenant", tenant))
             .andExpect(status().isOk())

@@ -202,7 +202,14 @@ public class SchedulingController {
         @RequestParam UUID serviceId,
         @RequestParam @NotNull LocalDate date,
         Authentication auth) {
-        requireAdminOrSelf(auth,tenant,practitionerUserId);
+        var actor=tenants.requireMembership(auth,tenant);
+        boolean administrative=actor.role().equals("CLINIC_ADMIN")
+            || actor.role().equals("RECEPTION");
+        boolean own=actor.role().equals("PRACTITIONER")
+            && actor.userId().equals(practitionerUserId);
+        if(!administrative&&!own) {
+            throw new AccessDeniedException("Schedule preview requires reception, admin or profile owner");
+        }
         if(date.isBefore(LocalDate.now()) || date.isAfter(LocalDate.now().plusDays(180))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"DATE_OUT_OF_RANGE");
         }
