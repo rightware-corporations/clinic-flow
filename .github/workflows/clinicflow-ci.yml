@@ -19,8 +19,11 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit -p tsconfig.app.json
+        if: always()
       - run: npm run test
+        if: always()
       - run: npm run build
+        if: always()
   backend:
     runs-on: ubuntu-latest
     services:
