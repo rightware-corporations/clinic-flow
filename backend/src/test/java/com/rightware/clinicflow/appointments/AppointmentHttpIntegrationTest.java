@@ -191,8 +191,8 @@ class AppointmentHttpIntegrationTest {
             Map.of("id",tenant,"name","Booking Test "+tenant));
         insert("INSERT INTO organizations(id,name) VALUES(:id,:name)",
             Map.of("id",foreign,"name","Foreign Test "+foreign));
-        UUID admin=user(tenant,"CLINIC_ADMIN"),practitioner=user(tenant,"PRACTITIONER");
-        UUID foreignAdmin=user(foreign,"CLINIC_ADMIN");
+        UUID admin=createUser(tenant,"CLINIC_ADMIN"),practitioner=createUser(tenant,"PRACTITIONER");
+        UUID foreignAdmin=createUser(foreign,"CLINIC_ADMIN");
         UUID patient=patient(tenant),second=patient(tenant);
         UUID unit=UUID.randomUUID(),service=UUID.randomUUID();
         insert("INSERT INTO clinic_units(id,tenant_id,name) VALUES(:id,:tenant,'General')",
@@ -223,7 +223,7 @@ class AppointmentHttpIntegrationTest {
         }
         return new Fixture(tenant,admin,practitioner,foreignAdmin,patient,second,unit,service);
     }
-    private UUID user(UUID tenant,String role){
+    private UUID createUser(UUID tenant,String role){
         UUID id=UUID.randomUUID();
         insert("""
             INSERT INTO users(id,email,display_name,password_hash)
