@@ -147,11 +147,23 @@ public class SchedulingController {
         Authentication auth) {
         var actor = requireAdminOrSelf(auth,tenant,input.practitionerUserId());
         requireActiveProfessional(tenant,input.practitionerUserId());
+        lockPractitioner(tenant,input.practitionerUserId());
         if (!input.endsAt().isAfter(input.startsAt())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INVALID_BLOCK_TIME");
         }
         if (input.endsAt().isAfter(input.startsAt().plusDays(31))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "BLOCK_TOO_LONG");
+        }
+        Integer conflictingAppointments=jdbc.queryForObject("""
+            SELECT count(*) FROM appointments
+            WHERE tenant_id=:tenant AND practitioner_user_id=:user
+              AND status <> 'CANCELLED'
+              AND starts_at < :end AND ends_at > :start
+            """,new MapSqlParameterSource()
+                .addValue("tenant",tenant).addValue("user",input.practitionerUserId())
+                .addValue("start",input.startsAt()).addValue("end",input.endsAt()),Integer.class);
+        if(conflictingAppointments!=null&&conflictingAppointments>0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"BLOCK_CONFLICTS_WITH_APPOINTMENT");
         }
         UUID id=UUID.randomUUID();
         jdbc.update("""
@@ -224,6 +236,18 @@ public class SchedulingController {
                 .addValue("user",practitionerUserId).addValue("dayStart",date.atStartOfDay())
                 .addValue("dayEnd",date.plusDays(1).atStartOfDay()),(rs,row)->blockRow(rs));
 
+        record ExistingAppointment(LocalDateTime start,LocalDateTime end){}
+        List<ExistingAppointment> booked=jdbc.query("""
+            SELECT starts_at,ends_at FROM appointments
+            WHERE tenant_id=:tenant AND practitioner_user_id=:user
+              AND status <> 'CANCELLED'
+              AND starts_at < :dayEnd AND ends_at > :dayStart
+            """,new MapSqlParameterSource().addValue("tenant",tenant)
+                .addValue("user",practitionerUserId).addValue("dayStart",date.atStartOfDay())
+                .addValue("dayEnd",date.plusDays(1).atStartOfDay()),
+            (rs,row)->new ExistingAppointment(
+                rs.getObject("starts_at",LocalDateTime.class),
+                rs.getObject("ends_at",LocalDateTime.class)));
         TreeMap<String,SlotView> slots=new TreeMap<>();
         for(var rule:dayRules){
             LocalDateTime cursor=LocalDateTime.of(date,rule.startTime());
@@ -235,7 +259,9 @@ public class SchedulingController {
                 LocalDateTime end=slotStart.plus(serviceDuration);
                 boolean blocked=dayBlocks.stream().anyMatch(b->
                     slotStart.isBefore(b.endsAt()) && end.isAfter(b.startsAt()));
-                if(!blocked){
+                boolean reserved=booked.stream().anyMatch(a->
+                    slotStart.isBefore(a.end()) && end.isAfter(a.start()));
+                if(!blocked&&!reserved){
                     String key=slotStart.toLocalTime()+"|"+rule.unitId();
                     slots.putIfAbsent(key,new SlotView(slotStart.toLocalTime(),end.toLocalTime(),rule.unitId()));
                 }
@@ -243,6 +269,17 @@ public class SchedulingController {
             }
         }
         return new SlotPreview(date,practitionerUserId,serviceId,duration,List.copyOf(slots.values()));
+    }
+
+    /** PostgreSQL row lock shared with appointment creation and rescheduling. */
+    private void lockPractitioner(UUID tenant,UUID user){
+        List<UUID> locked=jdbc.queryForList("""
+            SELECT user_id FROM practitioner_profiles
+            WHERE tenant_id=:tenant AND user_id=:user FOR UPDATE
+            """,Map.of("tenant",tenant,"user",user),UUID.class);
+        if(locked.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ACTIVE_PRACTITIONER_REQUIRED");
+        }
     }
 
     private TenantAccessService.TenantAccess requireAdminOrSelf(
