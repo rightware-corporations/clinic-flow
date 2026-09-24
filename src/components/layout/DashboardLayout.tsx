@@ -85,7 +85,7 @@ function getMenuItems(role: string): NavItem[] {
     case "paciente":
       return [
         { label: "Dashboard", href: "/paciente", icon: LayoutDashboard },
-        { label: "Agendar", href: "/agendar", icon: Calendar },
+        { label: "Simular agendamento", href: "/agendar", icon: Calendar },
         ...common,
       ];
     default:
