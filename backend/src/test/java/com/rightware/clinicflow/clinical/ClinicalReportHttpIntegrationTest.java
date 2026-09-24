@@ -12,6 +12,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -202,11 +203,11 @@ class ClinicalReportHttpIntegrationTest {
     private Fixture fixture() {
         UUID tenant=UUID.randomUUID(),otherTenant=UUID.randomUUID();
         createTenant(tenant); createTenant(otherTenant);
-        UUID admin=user(tenant,"CLINIC_ADMIN");
-        UUID reception=user(tenant,"RECEPTION");
-        UUID practitioner=user(tenant,"PRACTITIONER");
-        UUID otherPractitioner=user(tenant,"PRACTITIONER");
-        UUID intern=user(tenant,"INTERN");
+        UUID admin=createUser(tenant,"CLINIC_ADMIN");
+        UUID reception=createUser(tenant,"RECEPTION");
+        UUID practitioner=createUser(tenant,"PRACTITIONER");
+        UUID otherPractitioner=createUser(tenant,"PRACTITIONER");
+        UUID intern=createUser(tenant,"INTERN");
         createProfile(tenant,practitioner);
         createProfile(tenant,otherPractitioner);
         UUID patient=UUID.randomUUID();
@@ -230,10 +231,13 @@ class ClinicalReportHttpIntegrationTest {
                  starts_at,ends_at,status,created_by,idempotency_key,request_hash)
             VALUES(:id,:tenant,:patient,:practitioner,:unit,:service,
                    :start,:end,'IN_PROGRESS',:actor,:key,:hash)
-            """,Map.of("id",appointment,"tenant",tenant,"patient",patient,
-                "practitioner",practitioner,"unit",unit,"service",service,
-                "start",start,"end",start.plusMinutes(30),"actor",admin,
-                "key",UUID.randomUUID(),"hash","a".repeat(64)));
+            """,new MapSqlParameterSource()
+                .addValue("id",appointment).addValue("tenant",tenant)
+                .addValue("patient",patient).addValue("practitioner",practitioner)
+                .addValue("unit",unit).addValue("service",service)
+                .addValue("start",start).addValue("end",start.plusMinutes(30))
+                .addValue("actor",admin).addValue("key",UUID.randomUUID())
+                .addValue("hash","a".repeat(64)));
         return new Fixture(tenant,otherTenant,admin,reception,practitioner,
             otherPractitioner,intern,patient,appointment);
     }
@@ -242,7 +246,7 @@ class ClinicalReportHttpIntegrationTest {
         jdbc.update("INSERT INTO organizations(id,name) VALUES(:id,:name)",
             Map.of("id",tenant,"name","Clinic "+tenant));
     }
-    private UUID user(UUID tenant,String role) {
+    private UUID createUser(UUID tenant,String role) {
         UUID id=UUID.randomUUID();
         jdbc.update("""
             INSERT INTO users(id,email,display_name,password_hash)
