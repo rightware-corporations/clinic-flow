@@ -145,3 +145,65 @@ export async function archivePatient(id: string, version: number): Promise<void>
   await tenantMutation<unknown>(`/api/v1/patients/${encodeURIComponent(id)}/archive`,
     activeTenantId(), "POST", { version });
 }
+
+
+// CF-B3: professional directory (the server authorizes every tenant-scoped request).
+export type Specialty = { id: string; name: string; code: string; active: boolean };
+export type ClinicUnitRecord = { id: string; name: string; address: string | null; active: boolean };
+export type ClinicServiceRecord = {
+  id: string; name: string; slug: string; durationMinutes: number; active: boolean;
+  price: number | null; currencyCode: string | null;
+};
+export type EligibleProfessional = {
+  userId: string; displayName: string; email: string;
+  role: "PRACTITIONER" | "INTERN";
+};
+export type Professional = {
+  userId: string; displayName: string; email: string;
+  specialtyId: string | null; specialtyName: string | null;
+  professionalTitle: string | null; licenseNumber: string | null; bio: string | null;
+  unitIds: string[]; serviceIds: string[];
+  active: boolean; version: number;
+};
+export type ProfessionalInput = {
+  userId: string; specialtyId: string | null;
+  professionalTitle: string | null; licenseNumber: string | null; bio: string | null;
+  unitIds: string[]; serviceIds: string[]; version?: number;
+};
+export function listSpecialties(): Promise<Specialty[]> {
+  return tenantGet<Specialty[]>("/api/v1/specialties", activeTenantId());
+}
+export function addSpecialty(input: {name: string; code: string}): Promise<Specialty> {
+  return tenantMutation<Specialty>("/api/v1/specialties", activeTenantId(), "POST", input);
+}
+export function editSpecialty(id: string, input: {name: string; code: string}): Promise<Specialty> {
+  return tenantMutation<Specialty>("/api/v1/specialties/" + encodeURIComponent(id),
+    activeTenantId(), "PUT", input);
+}
+export function setSpecialtyActive(id: string, active: boolean): Promise<Specialty> {
+  return tenantMutation<Specialty>("/api/v1/specialties/" + encodeURIComponent(id)
+    + (active ? "/reactivate" : "/deactivate"), activeTenantId(), "POST");
+}
+export function listProfessionals(): Promise<Professional[]> {
+  return tenantGet<Professional[]>("/api/v1/practitioners", activeTenantId());
+}
+export function listEligibleProfessionals(): Promise<EligibleProfessional[]> {
+  return tenantGet<EligibleProfessional[]>("/api/v1/practitioners/eligible-members", activeTenantId());
+}
+export function listClinicUnits(): Promise<ClinicUnitRecord[]> {
+  return tenantGet<ClinicUnitRecord[]>("/api/v1/clinic-units", activeTenantId());
+}
+export function listClinicServices(): Promise<ClinicServiceRecord[]> {
+  return tenantGet<ClinicServiceRecord[]>("/api/v1/services", activeTenantId());
+}
+export function addProfessional(input: ProfessionalInput): Promise<Professional> {
+  return tenantMutation<Professional>("/api/v1/practitioners", activeTenantId(), "POST", input);
+}
+export function editProfessional(input: ProfessionalInput): Promise<Professional> {
+  return tenantMutation<Professional>("/api/v1/practitioners/" + encodeURIComponent(input.userId),
+    activeTenantId(), "PUT", input);
+}
+export function setProfessionalActive(userId: string, version: number, active: boolean): Promise<Professional> {
+  return tenantMutation<Professional>("/api/v1/practitioners/" + encodeURIComponent(userId)
+    + (active ? "/reactivate" : "/deactivate"), activeTenantId(), "POST", {version});
+}

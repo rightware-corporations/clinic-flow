@@ -77,6 +77,22 @@ public class PractitionerCatalogController {
         return specialty(tenant, id);
     }
 
+    @PostMapping("/specialties/{id}/reactivate")
+    @Transactional
+    public SpecialtyView reactivateSpecialty(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
+                                             @PathVariable UUID id, Authentication auth) {
+        var actor = tenants.requireClinicAdmin(auth, tenant);
+        int changed = jdbc.update("""
+            UPDATE specialties SET active=true
+            WHERE tenant_id=:tenant AND id=:id AND NOT active
+            """, Map.of("tenant",tenant,"id",id));
+        if (changed == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "INACTIVE_SPECIALTY_NOT_FOUND");
+        }
+        audit.write(tenant, actor.userId(), "SPECIALTY_REACTIVATED", "Specialty", id);
+        return specialty(tenant, id);
+    }
+
     @PostMapping("/specialties/{id}/deactivate")
     @Transactional
     public SpecialtyView deactivateSpecialty(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
@@ -114,7 +130,7 @@ public class PractitionerCatalogController {
     @GetMapping("/practitioners")
     public List<PractitionerView> practitioners(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                                 Authentication auth) {
-        tenants.requireMembership(auth, tenant);
+        tenants.requireClinicAdmin(auth, tenant);
         return jdbc.query("""
             SELECT p.user_id, u.display_name, u.email, p.specialty_id,
                    s.name AS specialty_name, p.professional_title, p.license_number,
@@ -132,7 +148,11 @@ public class PractitionerCatalogController {
     public PractitionerView practitioner(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                          @PathVariable UUID userId,
                                          Authentication auth) {
-        tenants.requireMembership(auth, tenant);
+        var access = tenants.requireMembership(auth, tenant);
+        if (!access.role().equals("CLINIC_ADMIN") && !access.userId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                "Only clinic administration or profile owner may read the profile");
+        }
         return findPractitioner(tenant, userId);
     }
 
@@ -196,6 +216,52 @@ public class PractitionerCatalogController {
             """, Map.of("tenant", tenant, "user", userId, "version", input.version()));
         if (changed == 0) practitionerConflictOrMissing(tenant, userId);
         audit.write(tenant, actor.userId(), "PRACTITIONER_DEACTIVATED", "Practitioner", userId);
+        return findPractitioner(tenant, userId);
+    }
+
+    @PostMapping("/practitioners/{userId}/reactivate")
+    @Transactional
+    public PractitionerView reactivatePractitioner(
+        @RequestHeader("X-Clinicflow-Tenant") UUID tenant,
+        @PathVariable UUID userId, @Valid @RequestBody VersionInput input,
+        Authentication auth) {
+        var actor = tenants.requireClinicAdmin(auth, tenant);
+        requireEligiblePractitionerMembership(tenant, userId);
+        // An inactive unit/service cannot be silently restored into an active profile.
+        Integer invalid = jdbc.queryForObject("""
+            SELECT
+                (SELECT count(*) FROM practitioner_units pu
+                 JOIN clinic_units cu ON cu.tenant_id=pu.tenant_id AND cu.id=pu.unit_id
+                 WHERE pu.tenant_id=:tenant AND pu.practitioner_user_id=:user
+                   AND NOT cu.active)
+              + (SELECT count(*) FROM practitioner_services ps
+                 JOIN service_definitions sd ON sd.tenant_id=ps.tenant_id
+                    AND sd.id=ps.service_id
+                 WHERE ps.tenant_id=:tenant AND ps.practitioner_user_id=:user
+                   AND NOT sd.active)
+              + (SELECT count(*) FROM practitioner_profiles pp
+                 JOIN specialties s ON s.tenant_id=pp.tenant_id AND s.id=pp.specialty_id
+                 WHERE pp.tenant_id=:tenant AND pp.user_id=:user AND NOT s.active)
+            """, Map.of("tenant",tenant,"user",userId), Integer.class);
+        if (invalid != null && invalid > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "INACTIVE_PRACTITIONER_ASSIGNMENT");
+        }
+        int changed = jdbc.update("""
+            UPDATE practitioner_profiles
+            SET active=true, version=version+1, updated_at=now()
+            WHERE tenant_id=:tenant AND user_id=:user AND NOT active AND version=:version
+            """, Map.of("tenant",tenant,"user",userId,"version",input.version()));
+        if (changed == 0) {
+            Integer existing = jdbc.queryForObject("""
+                SELECT count(*) FROM practitioner_profiles
+                WHERE tenant_id=:tenant AND user_id=:user AND NOT active
+                """, Map.of("tenant",tenant,"user",userId),Integer.class);
+            throw new ResponseStatusException(existing != null && existing > 0
+                ? HttpStatus.CONFLICT : HttpStatus.NOT_FOUND,
+                existing != null && existing > 0
+                ? "STALE_PRACTITIONER_VERSION" : "INACTIVE_PROFILE_NOT_FOUND");
+        }
+        audit.write(tenant, actor.userId(), "PRACTITIONER_REACTIVATED", "Practitioner", userId);
         return findPractitioner(tenant, userId);
     }
 
@@ -339,8 +405,8 @@ public class PractitionerCatalogController {
         @Size(max=120) String professionalTitle,
         @Size(max=120) String licenseNumber,
         @Size(max=1000) String bio,
-        @NotNull List<UUID> unitIds,
-        @NotNull List<UUID> serviceIds,
+        @NotNull List<@NotNull UUID> unitIds,
+        @NotNull List<@NotNull UUID> serviceIds,
         @Min(0) Long version) {}
     public record PractitionerView(
         UUID userId, String displayName, String email,
