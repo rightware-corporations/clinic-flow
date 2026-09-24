@@ -90,3 +90,58 @@ export async function logout(): Promise<void> {
   }));
   csrf = null;
 }
+
+
+export type PatientGender = "M" | "F" | "OTHER" | "NOT_DISCLOSED";
+export type PatientRecord = {
+  id: string;
+  name: string;
+  dateOfBirth: string;
+  gender: PatientGender;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  nationalId: string | null;
+  healthNumber: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type PatientInput = Omit<PatientRecord, "id" | "createdAt" | "updatedAt"> & {
+  version?: number;
+};
+export type PatientPage = {
+  items: PatientRecord[];
+  total: number;
+  page: number;
+  size: number;
+};
+
+export function activeTenantId(): string {
+  const tenant = sessionStorage.getItem("clinicflow:tenant");
+  if (!tenant) throw new Error("No active ClinicFlow tenant");
+  return tenant;
+}
+
+export async function listPatients(query = "", page = 0, size = 50): Promise<PatientPage> {
+  const params = new URLSearchParams({ query, page: String(page), size: String(size) });
+  return tenantGet<PatientPage>(`/api/v1/patients?${params}`, activeTenantId());
+}
+
+export async function getPatientRecord(id: string): Promise<PatientRecord> {
+  return tenantGet<PatientRecord>(`/api/v1/patients/${encodeURIComponent(id)}`, activeTenantId());
+}
+
+export async function createPatient(input: Omit<PatientInput, "version">): Promise<PatientRecord> {
+  return tenantMutation<PatientRecord>("/api/v1/patients", activeTenantId(), "POST", input);
+}
+
+export async function updatePatient(id: string, input: PatientInput): Promise<PatientRecord> {
+  return tenantMutation<PatientRecord>(`/api/v1/patients/${encodeURIComponent(id)}`,
+    activeTenantId(), "PUT", input);
+}
+
+export async function archivePatient(id: string, version: number): Promise<void> {
+  await tenantMutation<unknown>(`/api/v1/patients/${encodeURIComponent(id)}/archive`,
+    activeTenantId(), "POST", { version });
+}
