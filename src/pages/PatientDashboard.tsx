@@ -1,104 +1,51 @@
-import { motion } from "framer-motion";
-import { CalendarDays, Clock, MapPin, FileText, X, RefreshCw, User, Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { CalendarDays, FileText, Shield, UserRound } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { me } from "@/lib/clinicflow-api";
 
-const mockAppointments = [
-  { id: "a1", service: "Consulta de Medicina Geral", practitioner: "Dra. Ana Mendes", date: "2026-03-15", time: "09:30", unit: "Unidade Central", status: "upcoming" as const },
-  { id: "a2", service: "Eletrocardiograma", practitioner: "Dr. Ricardo Silva", date: "2026-03-20", time: "14:00", unit: "Unidade Central", status: "upcoming" as const },
-  { id: "a3", service: "Hemograma Completo", practitioner: "Lab.", date: "2026-02-10", time: "08:00", unit: "Laboratório", status: "completed" as const },
-  { id: "a4", service: "Fisioterapia", practitioner: "Ft. João Ferreira", date: "2026-01-28", time: "10:00", unit: "Unidade de Fisioterapia", status: "cancelled" as const },
-];
-
-const statusLabels = {
-  upcoming: { label: "Agendada", variant: "default" as const },
-  completed: { label: "Realizada", variant: "secondary" as const },
-  cancelled: { label: "Cancelada", variant: "destructive" as const },
-};
-
-export default function PatientDashboard() {
-  const upcoming = mockAppointments.filter((a) => a.status === "upcoming");
-  const past = mockAppointments.filter((a) => a.status !== "upcoming");
-  const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : { name: "João Silva" };
-
-  return (
-    <DashboardLayout>
-      <div className="p-6 md:p-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Área do Paciente</h1>
-            <p className="text-muted-foreground text-sm">Bem-vindo, {user.name}</p>
-          </div>
-          <Link to="/agendar">
-            <Button className="gap-2"><Calendar className="w-4 h-4" /> Nova Marcação</Button>
-          </Link>
-        </div>
-
-        <Tabs defaultValue="upcoming" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="upcoming">Próximas ({upcoming.length})</TabsTrigger>
-            <TabsTrigger value="history">Histórico ({past.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="upcoming">
-            {upcoming.length === 0 ? (
-              <div className="text-center py-16">
-                <CalendarDays className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                <h3 className="font-semibold mb-1">Sem marcações</h3>
-                <p className="text-sm text-muted-foreground">Não tem consultas agendadas.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {upcoming.map((apt, i) => (
-                  <motion.div key={apt.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="medical-card p-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{apt.service}</h3>
-                          <Badge>{statusLabels[apt.status].label}</Badge>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {apt.practitioner}</span>
-                          <span className="flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" /> {apt.date}</span>
-                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {apt.time}</span>
-                          <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {apt.unit}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Button variant="outline" size="sm" className="gap-1"><RefreshCw className="w-3.5 h-3.5" /> Remarcar</Button>
-                        <Button variant="outline" size="sm" className="gap-1 text-destructive"><X className="w-3.5 h-3.5" /> Cancelar</Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="history">
-            <div className="space-y-3">
-              {past.map((apt, i) => (
-                <motion.div key={apt.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="medical-card p-5 opacity-80">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm">{apt.service}</h3>
-                        <Badge variant={statusLabels[apt.status].variant}>{statusLabels[apt.status].label}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{apt.date} · {apt.time} · {apt.practitioner}</p>
-                    </div>
-                    <Button variant="ghost" size="sm"><FileText className="w-4 h-4" /></Button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+export default function PatientDashboard(){
+  const account=useQuery({queryKey:["patient-profile"],queryFn:me,staleTime:30_000});
+  return <DashboardLayout>
+    <section className="max-w-3xl mx-auto p-5 md:p-8 space-y-6">
+      <p className="text-xs uppercase tracking-widest text-muted-foreground">Área do paciente</p>
+      <h1 className="text-2xl md:text-3xl font-bold">
+        {account.data?"Bem-vindo, "+account.data.displayName:"Portal do paciente"}
+      </h1>
+      <div className="border rounded-xl bg-card p-6 md:p-8 space-y-5">
+        <span className="p-3 rounded-xl bg-primary/10 inline-flex text-primary">
+          <Shield className="h-7 w-7"/>
+        </span>
+        <h2 className="text-xl font-semibold">Acesso aos seus registos em preparação</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Ainda não está implementada a associação verificada entre a sua conta
+          e a ficha clínica do paciente. Por segurança, não são mostradas consultas,
+          resultados ou relatórios de demonstração como se fossem seus.
+        </p>
+        <Button variant="outline" asChild>
+          <Link to="/perfil"><UserRound className="h-4 w-4 mr-2"/> Gerir o meu perfil</Link>
+        </Button>
       </div>
-    </DashboardLayout>
-  );
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="border rounded-lg p-5 space-y-2">
+          <CalendarDays className="w-5 h-5 text-muted-foreground"/>
+          <h3 className="font-medium">As minhas consultas</h3>
+          <p className="text-xs text-muted-foreground">Ainda indisponível: vínculo de identidade pendente.</p>
+        </div>
+        <div className="border rounded-lg p-5 space-y-2">
+          <FileText className="w-5 h-5 text-muted-foreground"/>
+          <h3 className="font-medium">Os meus relatórios</h3>
+          <p className="text-xs text-muted-foreground">Acesso dependente de política de divulgação clínica.</p>
+        </div>
+      </div>
+      {account.isError&&<p role="alert" className="text-sm text-destructive">
+        Não foi possível consultar o perfil.
+      </p>}
+      <p className="text-xs text-muted-foreground">
+        A página pública de agendamento existente é uma demonstração,
+        não regista consultas reais.
+      </p>
+    </section>
+  </DashboardLayout>;
 }

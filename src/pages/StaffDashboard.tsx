@@ -1,167 +1,153 @@
-/**
- * StaffDashboard — Staff/Funcionário dashboard
- * 
- * Focus: appointment coordination, patient lookup, daily operations
- * Access: S### IDs
- */
-
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { CalendarDays, Clock3, RefreshCw, Search, Users } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Calendar,
-  Users,
-  Clock,
-  Phone,
-  Search,
-  CheckCircle2,
-  AlertCircle,
-  UserPlus,
-} from "lucide-react";
-import { getPatients } from "@/data/medical-reports-store";
+  activeTenantId, listAppointments, listPatients, type ClinicAppointment,
+} from "@/lib/clinicflow-api";
 
-const todayAppointments = [
-  { id: "1", patient: "João Silva", patientId: "C001", doctor: "Dra. Ana Mendes", time: "09:30", service: "Medicina Geral", status: "checked_in" as const },
-  { id: "2", patient: "Maria Santos", patientId: "C002", doctor: "Dra. Ana Mendes", time: "10:00", service: "Medicina Geral", status: "waiting" as const },
-  { id: "3", patient: "Pedro Costa", patientId: "C003", doctor: "Dr. Ricardo Silva", time: "10:30", service: "Cardiologia", status: "scheduled" as const },
-  { id: "4", patient: "Ana Ferreira", patientId: "C004", doctor: "Dra. Ana Mendes", time: "11:30", service: "Medicina Geral", status: "scheduled" as const },
-  { id: "5", patient: "Carlos Oliveira", patientId: "C005", doctor: "Dra. Sofia Marques", time: "14:00", service: "Dermatologia", status: "scheduled" as const },
-];
-
-const statusLabels: Record<string, { label: string; color: string }> = {
-  scheduled: { label: "Agendado", color: "bg-muted text-muted-foreground" },
-  waiting: { label: "Na sala de espera", color: "bg-warning/10 text-warning" },
-  checked_in: { label: "Check-in feito", color: "bg-primary/10 text-primary" },
-  in_consultation: { label: "Em consulta", color: "bg-accent/10 text-accent" },
-  completed: { label: "Concluído", color: "bg-success/10 text-success" },
+function todayOnDevice(): string {
+  const now = new Date();
+  return [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0")].join("-");
+}
+const statusText: Record<ClinicAppointment["status"], string> = {
+  REQUESTED: "Solicitada", CONFIRMED: "Confirmada", IN_PROGRESS: "Em consulta",
+  COMPLETED: "Concluída", CANCELLED: "Cancelada", NO_SHOW: "Falta",
 };
 
 export default function StaffDashboard() {
   const navigate = useNavigate();
+  const tenant = activeTenantId();
+  const today = todayOnDevice();
   const [search, setSearch] = useState("");
-  const patients = getPatients();
+  const calendar = useQuery({
+    queryKey: ["reception-calendar", tenant, today],
+    queryFn: () => listAppointments(today, today),
+    staleTime: 10_000,
+  });
+  const results = useQuery({
+    queryKey: ["reception-patients", tenant, search.trim()],
+    queryFn: () => listPatients(search.trim(), 0, 10),
+    enabled: search.trim().length >= 2,
+    staleTime: 10_000,
+  });
 
-  const filteredPatients = useMemo(() => {
-    if (!search) return [];
-    const q = search.toLowerCase();
-    return patients.filter((p) =>
-      p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || p.phone.includes(q)
-    );
-  }, [patients, search]);
-
-  const stats = [
-    { label: "Consultas Hoje", value: todayAppointments.length, icon: Calendar },
-    { label: "Aguardando", value: todayAppointments.filter((a) => a.status === "waiting").length, icon: Clock },
-    { label: "Check-in", value: todayAppointments.filter((a) => a.status === "checked_in").length, icon: CheckCircle2 },
-    { label: "Pacientes Registados", value: patients.length, icon: Users },
-  ];
-
-  return (
-    <DashboardLayout>
-      <div className="p-6 md:p-8 space-y-6">
+  return <DashboardLayout>
+    <section className="max-w-6xl mx-auto p-5 md:p-8 space-y-7">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Painel de Staff</h1>
-          <p className="text-sm text-muted-foreground">Gestão de recepção e coordenação</p>
+          <p className="text-xs tracking-wider uppercase text-muted-foreground">Recepção</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Operação diária</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Marcações e pesquisa de pacientes ligadas ao servidor.
+          </p>
         </div>
+        <Button className="gap-2" onClick={() => navigate("/marcacoes")}>
+          <CalendarDays className="h-4 w-4" /> Gerir marcações
+        </Button>
+      </header>
+      <p className="border rounded-lg p-3 text-xs text-muted-foreground bg-muted/30">
+        A data de hoje é calculada no dispositivo até existir um fuso horário próprio da clínica.
+        A recepção não tem acesso ao conteúdo dos relatórios clínicos.
+      </p>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {stats.map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                    <stat.icon className="w-4 h-4" />
-                    {stat.label}
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        <Tabs defaultValue="appointments" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="appointments">Consultas de Hoje</TabsTrigger>
-            <TabsTrigger value="patients">Pesquisa de Pacientes</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="appointments">
-            <div className="space-y-3">
-              {todayAppointments.map((apt, i) => (
-                <motion.div
-                  key={apt.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                >
-                  <Card className="hover:border-primary/20 transition-colors">
-                    <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                      <div className="flex items-center gap-4">
-                        <div className="text-center min-w-[50px]">
-                          <p className="text-lg font-bold text-primary">{apt.time}</p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{apt.patient}</p>
-                          <p className="text-xs text-muted-foreground">{apt.service} · {apt.doctor}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className={`text-xs ${statusLabels[apt.status].color}`}>
-                          {statusLabels[apt.status].label}
-                        </Badge>
-                        <Button variant="outline" size="sm" onClick={() => navigate(`/pacientes/${apt.patientId}`)}>
-                          Ver perfil
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+      <div className="grid lg:grid-cols-[1.3fr_1fr] gap-5">
+        <div className="border rounded-xl bg-card overflow-hidden">
+          <div className="p-5 border-b flex justify-between items-center gap-3">
+            <div>
+              <h2 className="font-semibold">Agenda de hoje</h2>
+              <p className="text-xs text-muted-foreground">{today}</p>
             </div>
-          </TabsContent>
-
-          <TabsContent value="patients">
-            <div className="space-y-4">
-              <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Pesquisar paciente (nome, ID, telefone)..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Button variant="outline" size="icon" aria-label="Actualizar agenda"
+              onClick={() => void calendar.refetch()}><RefreshCw className="w-4 h-4"/></Button>
+          </div>
+          {calendar.isPending && <p role="status" className="p-6 text-sm">A carregar marcações...</p>}
+          {calendar.isError && <p role="alert" className="p-6 text-sm text-destructive">
+            A agenda está indisponível. Actualize e tente novamente.
+          </p>}
+          {calendar.data && <>
+            <div className="px-5 py-3 border-b grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-2xl font-bold tabular-nums">{calendar.data.length}</p>
+                <p className="text-xs text-muted-foreground">Marcações hoje</p>
               </div>
-              {search && filteredPatients.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">Nenhum paciente encontrado</p>
+              <div>
+                <p className="text-2xl font-bold tabular-nums">
+                  {calendar.data.filter(a => a.status === "REQUESTED").length}
+                </p>
+                <p className="text-xs text-muted-foreground">A confirmar</p>
+              </div>
+            </div>
+            <div className="divide-y">
+              {calendar.data.slice(0, 8).map(appointment => <div
+                key={appointment.id} className="p-4 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{appointment.patientName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {appointment.serviceName} · {appointment.practitionerName}
+                  </p>
                 </div>
-              )}
-              <div className="space-y-2">
-                {filteredPatients.map((p) => (
-                  <Card key={p.id} className="cursor-pointer hover:border-primary/20 transition-colors" onClick={() => navigate(`/pacientes/${p.id}`)}>
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Users className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{p.name}</p>
-                          <p className="text-xs text-muted-foreground">{p.id} · {p.phone}</p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm">Ver perfil</Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm flex items-center justify-end gap-1">
+                    <Clock3 className="h-3.5 w-3.5" />
+                    {appointment.startsAt.slice(11, 16)}
+                  </p>
+                  <Badge variant="secondary">{statusText[appointment.status]}</Badge>
+                </div>
+              </div>)}
+              {calendar.data.length === 0 && <p className="p-10 text-sm text-center text-muted-foreground">
+                Nenhuma marcação para hoje.
+              </p>}
             </div>
-          </TabsContent>
-        </Tabs>
+            <div className="border-t p-4">
+              <Button variant="outline" className="w-full" onClick={() => navigate("/marcacoes")}>
+                Abrir agenda completa
+              </Button>
+            </div>
+          </>}
+        </div>
+        <div className="border rounded-xl bg-card p-5 space-y-4 self-start">
+          <div>
+            <h2 className="font-semibold">Encontrar paciente</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Pesquisa autorizada, limitada aos primeiros dez resultados.
+            </p>
+          </div>
+          <div className="relative">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/>
+            <Input className="pl-9" aria-label="Pesquisar paciente"
+              value={search} onChange={event => setSearch(event.target.value)}
+              placeholder="Nome do paciente..." />
+          </div>
+          {search.trim().length < 2 && <p className="text-sm text-muted-foreground">
+            Introduza pelo menos dois caracteres para pesquisar.
+          </p>}
+          {results.isLoading && <p role="status" className="text-sm">A pesquisar...</p>}
+          {results.isError && <p role="alert" className="text-sm text-destructive">
+            Pesquisa indisponível.
+          </p>}
+          {results.data && <div className="divide-y border rounded-lg">
+            {results.data.items.map(patient => <button
+              type="button" key={patient.id}
+              className="p-3 block w-full text-left hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => navigate("/pacientes/" + encodeURIComponent(patient.id))}>
+              <p className="text-sm font-medium">{patient.name}</p>
+              <p className="text-xs text-muted-foreground">{patient.dateOfBirth}</p>
+            </button>)}
+            {results.data.items.length === 0 && <p className="text-xs text-muted-foreground p-3">
+              Sem pacientes correspondentes.
+            </p>}
+          </div>}
+          <Button variant="outline" className="w-full" onClick={() => navigate("/pacientes")}>
+            <Users className="w-4 h-4 mr-2"/> Abrir registo de pacientes
+          </Button>
+        </div>
       </div>
-    </DashboardLayout>
-  );
+    </section>
+  </DashboardLayout>;
 }
