@@ -126,10 +126,13 @@ export default function AdminCatalogPage(){
       }
     },
   });
-  const status=useMutation({
-    mutationFn:(action:Pending)=>action.kind==="unit"
-      ? setClinicUnitActive(action.target.id,action.activate)
-      : setClinicServiceActive(action.target.id,action.activate),
+  const status=useMutation<ClinicUnitRecord|ClinicServiceRecord,Error,Pending>({
+    mutationFn:async(action:Pending):Promise<ClinicUnitRecord|ClinicServiceRecord>=>{
+      if(action.kind==="unit"){
+        return setClinicUnitActive(action.target.id,action.activate);
+      }
+      return setClinicServiceActive(action.target.id,action.activate);
+    },
     onSuccess:()=>{
       setPending(null);toast.success("Estado actualizado");void refresh();
     },
