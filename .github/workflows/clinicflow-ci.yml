@@ -1,0 +1,51 @@
+name: ClinicFlow CI
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run test
+      - run: npm run build
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: clinicflow_ci
+          POSTGRES_USER: clinicflow_ci
+          POSTGRES_PASSWORD: clinicflow_ci_only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U clinicflow_ci -d clinicflow_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 8
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/clinicflow_ci
+      SPRING_DATASOURCE_USERNAME: clinicflow_ci
+      SPRING_DATASOURCE_PASSWORD: clinicflow_ci_only
+      CLINICFLOW_BOOTSTRAP_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: Build, Flyway migration and tenant isolation integration tests
+        run: mvn -B -f backend/pom.xml verify
