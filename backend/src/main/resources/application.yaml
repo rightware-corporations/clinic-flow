@@ -37,3 +37,5 @@ clinicflow:
     admin-email: ${CLINICFLOW_BOOTSTRAP_EMAIL:}
     admin-password: ${CLINICFLOW_BOOTSTRAP_PASSWORD:}
     clinic-name: ${CLINICFLOW_BOOTSTRAP_CLINIC:}
+  invites:
+    ttl-hours: ${CLINICFLOW_INVITE_TTL_HOURS:72}

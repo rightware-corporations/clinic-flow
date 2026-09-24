@@ -23,7 +23,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/health/**",
-                    "/api/v1/auth/csrf").permitAll()
+                    "/api/v1/auth/csrf", "/api/v1/auth/invitations/**").permitAll()
                 .anyRequest().authenticated())
             .csrf(csrf -> csrf.csrfTokenRepository(
                 CookieCsrfTokenRepository.withHttpOnlyFalse()))

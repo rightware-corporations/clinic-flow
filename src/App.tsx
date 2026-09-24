@@ -26,6 +26,8 @@ import PatientProfilePage from "./pages/PatientProfilePage";
 import PatientsListPage from "./pages/PatientsListPage";
 import AdminProfessionalsPage from "./pages/AdminProfessionalsPage";
 import InternalAppointmentsPage from "./pages/InternalAppointmentsPage";
+import AdminTeamPage from "./pages/AdminTeamPage";
+import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -45,6 +47,7 @@ function AnimatedRoutes() {
         <Route path="/sobre" element={<PageTransition><AboutPage /></PageTransition>} />
         <Route path="/contacto" element={<PageTransition><ContactPage /></PageTransition>} />
         <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        <Route path="/convite" element={<PageTransition><AcceptInvitationPage /></PageTransition>} />
         
         {/* Authenticated routes — all roles */}
         <Route path="/perfil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -61,6 +64,7 @@ function AnimatedRoutes() {
         <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["profissional"]}><MedicalReportsPage /></ProtectedRoute>} />
         <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientsListPage /></ProtectedRoute>} />
         <Route path="/profissionais" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProfessionalsPage /></ProtectedRoute>} />
+        <Route path="/equipa" element={<ProtectedRoute allowedRoles={["admin"]}><AdminTeamPage /></ProtectedRoute>} />
         <Route path="/marcacoes" element={<ProtectedRoute allowedRoles={["admin", "staff", "profissional"]}><InternalAppointmentsPage /></ProtectedRoute>} />
         <Route path="/pacientes/:id" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientProfilePage /></ProtectedRoute>} />
         
