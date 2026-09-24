@@ -27,6 +27,7 @@ import PatientsListPage from "./pages/PatientsListPage";
 import AdminProfessionalsPage from "./pages/AdminProfessionalsPage";
 import InternalAppointmentsPage from "./pages/InternalAppointmentsPage";
 import AdminTeamPage from "./pages/AdminTeamPage";
+import AdminCatalogPage from "./pages/AdminCatalogPage";
 import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
@@ -65,6 +66,7 @@ function AnimatedRoutes() {
         <Route path="/pacientes" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientsListPage /></ProtectedRoute>} />
         <Route path="/profissionais" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProfessionalsPage /></ProtectedRoute>} />
         <Route path="/equipa" element={<ProtectedRoute allowedRoles={["admin"]}><AdminTeamPage /></ProtectedRoute>} />
+        <Route path="/catalogo" element={<ProtectedRoute allowedRoles={["admin"]}><AdminCatalogPage /></ProtectedRoute>} />
         <Route path="/marcacoes" element={<ProtectedRoute allowedRoles={["admin", "staff", "profissional"]}><InternalAppointmentsPage /></ProtectedRoute>} />
         <Route path="/pacientes/:id" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientProfilePage /></ProtectedRoute>} />
         

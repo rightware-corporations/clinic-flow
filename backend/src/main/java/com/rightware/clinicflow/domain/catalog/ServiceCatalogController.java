@@ -86,6 +86,21 @@ public class ServiceCatalogController {
     public ServiceDefinition deactivate(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                         @PathVariable UUID id, Authentication auth) {
         var actor = tenancy.requireClinicAdmin(auth, tenant);
+        var locked=jdbc.queryForList("""
+            SELECT id FROM service_definitions
+            WHERE tenant_id=:tenant AND id=:id AND active FOR UPDATE
+            """,Map.of("tenant",tenant,"id",id),UUID.class);
+        if(locked.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"ACTIVE_SERVICE_NOT_FOUND");
+        }
+        Integer booked=jdbc.queryForObject("""
+            SELECT count(*) FROM appointments
+            WHERE tenant_id=:tenant AND service_id=:id
+              AND status IN ('REQUESTED','CONFIRMED','IN_PROGRESS')
+            """,Map.of("tenant",tenant,"id",id),Integer.class);
+        if(booked!=null&&booked>0){
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"SERVICE_HAS_ACTIVE_APPOINTMENTS");
+        }
         Integer assigned = jdbc.queryForObject("""
             SELECT count(*) FROM practitioner_services ps
             JOIN practitioner_profiles pp ON pp.tenant_id=ps.tenant_id
@@ -102,6 +117,22 @@ public class ServiceCatalogController {
         if (updated == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         audit.write(tenant, actor.userId(), "SERVICE_DEACTIVATED", "ServiceDefinition", id);
         return find(tenant, id);
+    }
+
+    @PostMapping("/{id}/reactivate")
+    @Transactional
+    public ServiceDefinition reactivate(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
+                                        @PathVariable UUID id,Authentication auth){
+        var actor=tenancy.requireClinicAdmin(auth,tenant);
+        int updated=jdbc.update("""
+            UPDATE service_definitions SET active=true
+            WHERE tenant_id=:tenant AND id=:id AND NOT active
+            """,Map.of("tenant",tenant,"id",id));
+        if(updated==0){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"INACTIVE_SERVICE_NOT_FOUND");
+        }
+        audit.write(tenant,actor.userId(),"SERVICE_REACTIVATED","ServiceDefinition",id);
+        return find(tenant,id);
     }
 
     private ServiceDefinition find(UUID tenant, UUID id) {

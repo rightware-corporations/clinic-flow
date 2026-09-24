@@ -82,6 +82,21 @@ public class ClinicUnitController {
     public ClinicUnit deactivate(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
                                  @PathVariable UUID id, Authentication auth) {
         var actor = tenancy.requireClinicAdmin(auth, tenant);
+        var locked = jdbc.queryForList("""
+            SELECT id FROM clinic_units
+            WHERE tenant_id=:tenant AND id=:id AND active FOR UPDATE
+            """, Map.of("tenant",tenant,"id",id), UUID.class);
+        if (locked.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"ACTIVE_CLINIC_UNIT_NOT_FOUND");
+        }
+        Integer booked = jdbc.queryForObject("""
+            SELECT count(*) FROM appointments
+            WHERE tenant_id=:tenant AND unit_id=:id
+              AND status IN ('REQUESTED','CONFIRMED','IN_PROGRESS')
+            """,Map.of("tenant",tenant,"id",id),Integer.class);
+        if (booked!=null && booked>0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"CLINIC_UNIT_HAS_ACTIVE_APPOINTMENTS");
+        }
         Integer assigned = jdbc.queryForObject("""
             SELECT count(*) FROM practitioner_units pu
             JOIN practitioner_profiles pp ON pp.tenant_id=pu.tenant_id
@@ -99,6 +114,22 @@ public class ClinicUnitController {
         if (updated == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         audit.write(tenant, actor.userId(), "CLINIC_UNIT_DEACTIVATED", "ClinicUnit", id);
         return find(tenant, id);
+    }
+
+    @PostMapping("/{id}/reactivate")
+    @Transactional
+    public ClinicUnit reactivate(@RequestHeader("X-Clinicflow-Tenant") UUID tenant,
+                                 @PathVariable UUID id,Authentication auth){
+        var actor=tenancy.requireClinicAdmin(auth,tenant);
+        int updated=jdbc.update("""
+            UPDATE clinic_units SET active=true
+            WHERE tenant_id=:tenant AND id=:id AND NOT active
+            """,Map.of("tenant",tenant,"id",id));
+        if(updated==0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"INACTIVE_CLINIC_UNIT_NOT_FOUND");
+        }
+        audit.write(tenant,actor.userId(),"CLINIC_UNIT_REACTIVATED","ClinicUnit",id);
+        return find(tenant,id);
     }
 
     private ClinicUnit find(UUID tenant, UUID id) {

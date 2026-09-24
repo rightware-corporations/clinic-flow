@@ -419,3 +419,50 @@ export async function acceptInvitation(
     },
   ));
 }
+
+
+// CF-B9: tenant-scoped administration of clinic units and service definitions.
+export type ClinicUnitInput = { name: string; address: string | null };
+export type ClinicServiceInput = {
+  name: string; slug: string; durationMinutes: number;
+  price: number | null; currencyCode: string | null;
+};
+export function createClinicUnit(input: ClinicUnitInput): Promise<ClinicUnitRecord> {
+  return tenantMutation<ClinicUnitRecord>(
+    "/api/v1/clinic-units", activeTenantId(), "POST", input,
+  );
+}
+export function updateClinicUnit(id: string, input: ClinicUnitInput): Promise<ClinicUnitRecord> {
+  return tenantMutation<ClinicUnitRecord>(
+    "/api/v1/clinic-units/" + encodeURIComponent(id),
+    activeTenantId(), "PUT", input,
+  );
+}
+export function setClinicUnitActive(id: string, nextActive: boolean): Promise<ClinicUnitRecord> {
+  return tenantMutation<ClinicUnitRecord>(
+    "/api/v1/clinic-units/" + encodeURIComponent(id)
+      + (nextActive ? "/reactivate" : "/deactivate"),
+    activeTenantId(), "POST",
+  );
+}
+export function createClinicService(input: ClinicServiceInput): Promise<ClinicServiceRecord> {
+  return tenantMutation<ClinicServiceRecord>(
+    "/api/v1/services", activeTenantId(), "POST", input,
+  );
+}
+export function updateClinicService(
+  id: string, input: ClinicServiceInput,
+): Promise<ClinicServiceRecord> {
+  return tenantMutation<ClinicServiceRecord>(
+    "/api/v1/services/" + encodeURIComponent(id), activeTenantId(), "PUT", input,
+  );
+}
+export function setClinicServiceActive(
+  id: string, nextActive: boolean,
+): Promise<ClinicServiceRecord> {
+  return tenantMutation<ClinicServiceRecord>(
+    "/api/v1/services/" + encodeURIComponent(id)
+      + (nextActive ? "/reactivate" : "/deactivate"),
+    activeTenantId(), "POST",
+  );
+}
