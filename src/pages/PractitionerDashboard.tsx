@@ -134,6 +134,11 @@ export default function PractitionerDashboard(){
                   <Badge variant={item.status==="CANCELLED"?"destructive":"secondary"}>
                     {statuses[item.status]}
                   </Badge>
+                  {["CONFIRMED","IN_PROGRESS","COMPLETED"].includes(item.status)&&
+                    <Button size="sm" variant="outline" className="mt-2"
+                      onClick={()=>navigate("/profissional/observacoes-enfermagem/"+encodeURIComponent(item.id))}>
+                      Ver observações da enfermagem
+                    </Button>}
                   {item.status==="CONFIRMED"&&arrivals.isSuccess&&<p className="mt-2">
                     {arrivalsByAppointment.has(item.id)
                       ? <Badge variant={arrivalsByAppointment.get(item.id)?.queueStatus==="CALLED"

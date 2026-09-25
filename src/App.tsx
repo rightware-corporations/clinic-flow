@@ -19,6 +19,8 @@ import StaffDashboard from "./pages/StaffDashboard";
 import ReceptionQueuePage from "./pages/ReceptionQueuePage";
 import InternDashboard from "./pages/InternDashboard";
 import NursingDashboardPage from "./pages/NursingDashboardPage";
+import NursingObservationPage from "./pages/NursingObservationPage";
+import PractitionerNursingObservationPage from "./pages/PractitionerNursingObservationPage";
 import AdminNursingAssignmentsPage from "./pages/AdminNursingAssignmentsPage";
 import CategoryPage from "./pages/CategoryPage";
 import AboutPage from "./pages/AboutPage";
@@ -65,6 +67,8 @@ function AnimatedRoutes() {
         <Route path="/recepcao/fila" element={<ProtectedRoute allowedRoles={["staff","admin"]}><ReceptionQueuePage /></ProtectedRoute>} />
         <Route path="/interno" element={<ProtectedRoute allowedRoles={["interno"]}><InternDashboard /></ProtectedRoute>} />
         <Route path="/enfermagem" element={<ProtectedRoute allowedRoles={["enfermagem"]}><NursingDashboardPage /></ProtectedRoute>} />
+        <Route path="/enfermagem/observacoes/:appointmentId" element={<ProtectedRoute allowedRoles={["enfermagem"]}><NursingObservationPage /></ProtectedRoute>} />
+        <Route path="/profissional/observacoes-enfermagem/:appointmentId" element={<ProtectedRoute allowedRoles={["profissional"]}><PractitionerNursingObservationPage /></ProtectedRoute>} />
         <Route path="/equipa/enfermagem" element={<ProtectedRoute allowedRoles={["admin"]}><AdminNursingAssignmentsPage /></ProtectedRoute>} />
         
         {/* Medical system — doctors, staff, admins, interns (read-only) */}

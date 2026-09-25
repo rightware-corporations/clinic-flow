@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -130,6 +131,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -149,6 +151,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = async () => {
     try {
       await serverLogout();
+      queryClient.clear();
       localStorage.removeItem("user");
       sessionStorage.removeItem("clinicflow:tenant");
       window.dispatchEvent(new Event("auth-change"));

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { RefreshCw, ShieldCheck, ClipboardList } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -12,6 +13,7 @@ function deviceDate():string {
     String(today.getDate()).padStart(2,"0")].join("-");
 }
 export default function NursingDashboardPage(){
+  const navigate=useNavigate();
   const tenant=activeTenantId();
   const today=deviceDate();
   const [unit,setUnit]=useState("");
@@ -43,9 +45,9 @@ export default function NursingDashboardPage(){
       </header>
       <div className="flex gap-3 rounded-lg border bg-muted/30 p-4 text-sm">
         <ShieldCheck className="h-5 w-5 shrink-0 text-primary"/>
-        <p>Esta página é apenas operacional: não regista sinais vitais, não realiza triagem
-          e não disponibiliza relatórios. Data do dispositivo: {today}.
-          O servidor restringe todos os resultados às unidades atribuídas.</p>
+        <p>A fila apresenta apenas chegadas atribuídas. O registo de observações
+          é aberto individualmente e não realiza classificação de urgência nem diagnóstico.
+          Data do dispositivo: {today}. O servidor restringe os resultados às unidades atribuídas.</p>
       </div>
       {units.isLoading&&<p role="status">A carregar unidades atribuídas...</p>}
       {units.isError&&<div role="alert" className="rounded-lg border p-4">
@@ -113,6 +115,10 @@ export default function NursingDashboardPage(){
                 {item.appointmentStatus==="IN_PROGRESS"&&<Badge variant="outline">
                   Em consulta
                 </Badge>}
+                <Button size="sm" variant="outline"
+                  onClick={()=>navigate("/enfermagem/observacoes/"+encodeURIComponent(item.appointmentId))}>
+                  Registar observações
+                </Button>
               </div>
             </div>)}
           </div>
