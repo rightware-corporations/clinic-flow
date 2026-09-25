@@ -25,6 +25,7 @@ class PractitionerHandoffHttpIntegrationTest {
 
     @Autowired MockMvc mvc;
     @Autowired NamedParameterJdbcTemplate jdbc;
+    @Autowired org.springframework.transaction.PlatformTransactionManager transactionManager;
 
     @Test
     void absentAndDraftNotesHaveIdenticalPublicIndicators() throws Exception {
@@ -239,6 +240,117 @@ class PractitionerHandoffHttpIntegrationTest {
             .andExpect(status().isForbidden());
 
         assertEquals(0, auditCount(f, "PRACTITIONER_HANDOFF_VIEWED"));
+    }
+
+
+    @Test
+    void onePractitionerInTwoClinicsCannotCrossReadBySwitchingTenantHeader() throws Exception {
+        Fixture first = fixture();
+        UUID secondTenant = UUID.randomUUID();
+        write("INSERT INTO organizations(id,name) VALUES(:id,:name)",
+            Map.of("id", secondTenant, "name", "Second synthetic clinic " + secondTenant));
+        write("""
+            INSERT INTO tenant_memberships(tenant_id,user_id,role)
+            VALUES(:tenant,:doctor,'PRACTITIONER')
+            """, Map.of("tenant", secondTenant, "doctor", first.doctorA()));
+        write("""
+            INSERT INTO practitioner_profiles(tenant_id,user_id,professional_title)
+            VALUES(:tenant,:doctor,'Synthetic dual-clinic doctor')
+            """, Map.of("tenant", secondTenant, "doctor", first.doctorA()));
+        UUID secondUnit = UUID.randomUUID();
+        UUID secondService = UUID.randomUUID();
+        write("INSERT INTO clinic_units(id,tenant_id,name) VALUES(:id,:tenant,'Second synthetic unit')",
+            Map.of("id", secondUnit, "tenant", secondTenant));
+        write("""
+            INSERT INTO service_definitions(id,tenant_id,name,slug,duration_minutes)
+            VALUES(:id,:tenant,'Second synthetic service',:slug,30)
+            """, Map.of("id", secondService, "tenant", secondTenant,
+                "slug", "j01-dual-" + secondService));
+        Fixture second = new Fixture(secondTenant, first.doctorA(), first.doctorB(),
+            first.admin(), first.reception(), first.nurse(), first.intern(),
+            first.patientUser(), first.foreignDoctor(), secondUnit, secondService);
+        UUID firstAppointment = appointment(first, first.doctorA(), 16);
+        UUID secondAppointment = appointment(second, first.doctorA(), 17);
+        checkIn(first, firstAppointment);
+        checkIn(second, secondAppointment);
+        for (var own : List.of(
+                Map.entry(first.tenant(), firstAppointment),
+                Map.entry(second.tenant(), secondAppointment))) {
+            mvc.perform(get(API + own.getValue()).with(user(email(first.doctorA())))
+                    .header("X-Clinicflow-Tenant", own.getKey()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.indicator").value("NO_SUBMITTED_NOTE"));
+        }
+        mvc.perform(get(API + firstAppointment).with(user(email(first.doctorA())))
+                .header("X-Clinicflow-Tenant", secondTenant))
+            .andExpect(status().isNotFound());
+        mvc.perform(get(API + secondAppointment).with(user(email(first.doctorA())))
+                .header("X-Clinicflow-Tenant", first.tenant()))
+            .andExpect(status().isNotFound());
+        assertEquals(1, auditCount(first, "PRACTITIONER_HANDOFF_VIEWED"));
+        assertEquals(1, auditCount(second, "PRACTITIONER_HANDOFF_VIEWED"));
+    }
+
+    @Test
+    void concurrentOriginalReceiptAndCorrectionAreInvisibleUntilTheirTransactionCommits()
+            throws Exception {
+        Fixture f = fixture();
+        UUID encounter = appointment(f, f.doctorA(), 18);
+        checkIn(f, encounter);
+        UUID note = observation(f, encounter, "SUBMITTED");
+        var writerReady = new java.util.concurrent.CountDownLatch(1);
+        var permitCommit = new java.util.concurrent.CountDownLatch(1);
+        var pool = java.util.concurrent.Executors.newSingleThreadExecutor();
+        try {
+            var writer = pool.submit(() -> {
+                var transaction = new org.springframework.transaction.support.TransactionTemplate(
+                    transactionManager);
+                transaction.executeWithoutResult(status -> {
+                    jdbc.update("""
+                        UPDATE nursing_observations
+                        SET status='ACKNOWLEDGED',version=version+1,
+                            acknowledged_at=now(),acknowledged_by=:doctor
+                        WHERE tenant_id=:tenant AND id=:note
+                        """, Map.of("doctor", f.doctorA(), "tenant", f.tenant(), "note", note));
+                    addendum(f, note, false);
+                    writerReady.countDown();
+                    try {
+                        if (!permitCommit.await(15, java.util.concurrent.TimeUnit.SECONDS)) {
+                            throw new IllegalStateException("Timed out waiting for reader");
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new IllegalStateException(e);
+                    }
+                });
+            });
+            org.junit.jupiter.api.Assertions.assertTrue(
+                writerReady.await(15, java.util.concurrent.TimeUnit.SECONDS),
+                "Writer must reach the deterministic pre-commit barrier");
+            try {
+                // PostgreSQL READ COMMITTED: one SQL statement cannot mix uncommitted
+                // receipt and addendum changes from the other transaction.
+                mvc.perform(get(API + encounter).with(user(email(f.doctorA())))
+                        .header("X-Clinicflow-Tenant", f.tenant()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.indicator").value("ORIGINAL_RECEIPT_PENDING"))
+                    .andExpect(jsonPath("$.correctionCount").value(0));
+            } finally {
+                permitCommit.countDown();
+            }
+            writer.get(15, java.util.concurrent.TimeUnit.SECONDS);
+            mvc.perform(get(API + encounter).with(user(email(f.doctorA())))
+                    .header("X-Clinicflow-Tenant", f.tenant()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.indicator").value("CORRECTION_RECEIPTS_PENDING"))
+                .andExpect(jsonPath("$.publishedNursingNote").value("ACKNOWLEDGED"))
+                .andExpect(jsonPath("$.correctionCount").value(1))
+                .andExpect(jsonPath("$.pendingCorrectionReceipts").value(1));
+            assertEquals(2, auditCount(f, "PRACTITIONER_HANDOFF_VIEWED"));
+        } finally {
+            permitCommit.countDown();
+            pool.shutdownNow();
+        }
     }
 
     private Fixture fixture() {
