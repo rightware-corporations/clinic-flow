@@ -72,9 +72,10 @@ function getMenuItems(role: string): NavItem[] {
       ];
     case "staff":
       return [
-        { label: "Dashboard", href: "/staff", icon: LayoutDashboard },
-        { label: "Pacientes", href: "/pacientes", icon: Users },
+        { label: "Operação diária", href: "/staff", icon: LayoutDashboard },
+        { label: "Chegadas e fila", href: "/recepcao/fila", icon: ClipboardList },
         { label: "Agendamentos", href: "/marcacoes", icon: Calendar },
+        { label: "Pacientes", href: "/pacientes", icon: Users },
         ...common,
       ];
     case "interno":
