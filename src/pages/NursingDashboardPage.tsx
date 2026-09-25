@@ -38,6 +38,9 @@ export default function NursingDashboardPage(){
             Pacientes com chegada registada nas unidades a que tem acesso.
           </p>
         </div>
+        <Button variant="outline" onClick={()=>navigate("/enfermagem/historico")}>
+          Histórico de observações
+        </Button>
         <Button variant="outline" className="gap-2" onClick={()=>{
           void units.refetch();
           if(units.data?.length)void arrivals.refetch();

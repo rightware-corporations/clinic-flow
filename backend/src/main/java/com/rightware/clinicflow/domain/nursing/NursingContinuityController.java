@@ -295,7 +295,7 @@ public class NursingContinuityController {
                    acknowledged_at,acknowledged_by
             FROM nursing_observation_addenda
             WHERE tenant_id=:tenant AND observation_id=:observation
-            ORDER BY created_at,id LIMIT :limit OFFSET :offset
+            ORDER BY created_at DESC,id DESC LIMIT :limit OFFSET :offset
             """, args, (rs, row) -> mapCorrection(rs));
         return new CorrectionPage(items, total == null ? 0 : total, page, PAGE_SIZE);
     }

@@ -82,6 +82,7 @@ function getMenuItems(role: string): NavItem[] {
     case "enfermagem":
       return [
         { label: "Enfermagem", href: "/enfermagem", icon: ClipboardList },
+        { label: "Histórico", href: "/enfermagem/historico", icon: FileText },
         ...common,
       ];
     case "interno":
