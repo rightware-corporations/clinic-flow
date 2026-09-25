@@ -57,3 +57,36 @@ describe("patient-registry route policy", () => {
     expect(screen.queryByText("Patient Registry")).toBeNull();
   });
 });
+
+describe("CF-N01 verified nursing boundaries",()=>{
+  it("permits a verified nurse only into the nursing route",async()=>{
+    vi.mocked(me).mockResolvedValue({
+      id:"nurse-a",email:"nurse@example.invalid",displayName:"Nurse",
+      memberships:[{tenantId:"tenant-1",clinicName:"Clinic",role:"NURSE"}],
+    });
+    render(<MemoryRouter initialEntries={["/enfermagem"]}><Routes>
+      <Route path="/enfermagem" element={<ProtectedRoute allowedRoles={["enfermagem"]}>
+        <span>Nursing Workbench</span>
+      </ProtectedRoute>}/>
+      <Route path="/login" element={<span>Login</span>}/>
+    </Routes></MemoryRouter>);
+    expect(await screen.findByText("Nursing Workbench")).toBeInTheDocument();
+    expect(sessionStorage.getItem("clinicflow:tenant")).toBe("tenant-1");
+  });
+
+  it("does not elevate a verified nurse to clinic administration",async()=>{
+    localStorage.setItem("user",JSON.stringify({role:"admin"}));
+    vi.mocked(me).mockResolvedValue({
+      id:"nurse-a",email:"nurse@example.invalid",displayName:"Nurse",
+      memberships:[{tenantId:"tenant-1",clinicName:"Clinic",role:"NURSE"}],
+    });
+    render(<MemoryRouter initialEntries={["/equipa/enfermagem"]}><Routes>
+      <Route path="/equipa/enfermagem" element={
+        <ProtectedRoute allowedRoles={["admin"]}><span>Admin-only assignments</span></ProtectedRoute>
+      }/>
+      <Route path="/enfermagem" element={<span>Nursing Workbench</span>}/>
+    </Routes></MemoryRouter>);
+    expect(await screen.findByText("Nursing Workbench")).toBeInTheDocument();
+    expect(screen.queryByText("Admin-only assignments")).not.toBeInTheDocument();
+  });
+});
