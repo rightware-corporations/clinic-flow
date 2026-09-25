@@ -17,6 +17,7 @@ export default function NursingHistoryPage(){
     queryKey:["nursing-history",tenant,page],
     queryFn:()=>listOwnNursingHistory(page),
     staleTime:0,
+    gcTime:0, // Evict scoped patient metadata as soon as this page unmounts.
   });
   return <DashboardLayout>
     <section className="mx-auto max-w-5xl space-y-6 p-5 md:p-8">
