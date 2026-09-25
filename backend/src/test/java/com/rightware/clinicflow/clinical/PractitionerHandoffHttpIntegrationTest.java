@@ -167,6 +167,43 @@ class PractitionerHandoffHttpIntegrationTest {
     }
 
     @Test
+    void reassignmentAndMembershipRevocationImmediatelyRemoveHandoffAccess() throws Exception {
+        Fixture f = fixture();
+        UUID assigned = appointment(f, f.doctorA(), 15);
+        checkIn(f, assigned);
+        observation(f, assigned, "SUBMITTED");
+
+        mvc.perform(get(API + assigned).with(user(email(f.doctorA())))
+                .header("X-Clinicflow-Tenant", f.tenant()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.indicator").value("ORIGINAL_RECEIPT_PENDING"));
+
+        // An existing observation must not remain visible to its former doctor.
+        jdbc.update("""
+            UPDATE appointments SET practitioner_user_id=:replacement
+            WHERE tenant_id=:tenant AND id=:appointment
+            """, Map.of("replacement", f.doctorB(), "tenant", f.tenant(),
+                        "appointment", assigned));
+        mvc.perform(get(API + assigned).with(user(email(f.doctorA())))
+                .header("X-Clinicflow-Tenant", f.tenant()))
+            .andExpect(status().isNotFound());
+        mvc.perform(get(API + assigned).with(user(email(f.doctorB())))
+                .header("X-Clinicflow-Tenant", f.tenant()))
+            .andExpect(status().isOk());
+
+        // Membership revocation must override an otherwise valid assignment.
+        jdbc.update("""
+            UPDATE tenant_memberships SET active=false
+            WHERE tenant_id=:tenant AND user_id=:doctor
+            """, Map.of("tenant", f.tenant(), "doctor", f.doctorB()));
+        mvc.perform(get(API + assigned).with(user(email(f.doctorB())))
+                .header("X-Clinicflow-Tenant", f.tenant()))
+            .andExpect(status().isForbidden());
+
+        assertEquals(2, auditCount(f, "PRACTITIONER_HANDOFF_VIEWED"));
+    }
+
+    @Test
     void suspendedTenantInactiveProfileAndCancelledAppointmentFailClosed() throws Exception {
         Fixture f = fixture();
         UUID own = appointment(f, f.doctorA(), 14);
