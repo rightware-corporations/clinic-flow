@@ -279,6 +279,245 @@ class NursingObservationHttpIntegrationTest {
             """,Map.of("tenant",tenant),Integer.class));
     }
 
+    @Test
+    void n03HistoryAndImmutableCorrectionsRequireCurrentCareRelationship() throws Exception {
+        UUID tenant=tenant("N03 Continuity");
+        UUID foreign=tenant("N03 Foreign");
+        UUID admin=user(tenant,"CLINIC_ADMIN");
+        UUID reception=user(tenant,"RECEPTION");
+        UUID nurse=user(tenant,"NURSE");
+        UUID otherNurse=user(tenant,"NURSE");
+        UUID foreignNurse=user(foreign,"NURSE");
+        UUID doctor=user(tenant,"PRACTITIONER");
+        UUID otherDoctor=user(tenant,"PRACTITIONER");
+        nursingProfile(tenant,nurse);
+        nursingProfile(tenant,otherNurse);
+        nursingProfile(foreign,foreignNurse);
+        practitionerProfile(tenant,doctor);
+        practitionerProfile(tenant,otherDoctor);
+        UUID unit=unit(tenant,"N03 assigned unit");
+        assign(tenant,nurse,unit);
+        assign(tenant,otherNurse,unit);
+        UUID service=service(tenant);
+        UUID appointment=appointment(tenant,doctor,admin,unit,service,
+            LocalDateTime.of(2026,9,24,10,0));
+        checkIn(tenant,appointment,reception);
+        String nEmail=email(nurse);
+        String dEmail=email(doctor);
+        String originalText="Sintético: observação original";
+        String correctionText="Correcção sintética: esclarecer informação registada";
+        UUID key=UUID.randomUUID();
+
+        mvc.perform(post("/api/v1/nursing/observations")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"appointmentId":"%s","observationNotes":"%s"}
+                    """.formatted(appointment,originalText)))
+            .andExpect(status().isCreated());
+        mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/submit")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"version\":0}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("SUBMITTED"));
+
+        jdbc.update("""
+            UPDATE appointments SET status='COMPLETED'
+            WHERE tenant_id=:tenant AND id=:appointment
+            """,Map.of("tenant",tenant,"appointment",appointment));
+
+        mvc.perform(get("/api/v1/nursing/observations/history").param("page","0")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(1))
+            .andExpect(jsonPath("$.items[0].appointmentId").value(appointment.toString()))
+            .andExpect(jsonPath("$.items[0].correctionCount").value(0))
+            .andExpect(jsonPath("$.items[0].observationNotes").doesNotExist());
+
+        mvc.perform(get("/api/v1/nursing/observations/history/"+appointment)
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("SUBMITTED"));
+
+        mvc.perform(get("/api/v1/nursing/observations/history")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(otherNurse)))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0));
+
+        mvc.perform(get("/api/v1/nursing/observations/history")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(admin)))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isForbidden());
+
+        mvc.perform(get("/api/v1/nursing/observations/history")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(foreignNurse)))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isForbidden());
+
+        mvc.perform(get("/api/v1/nursing/observations/history").param("page","1001")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isBadRequest());
+
+        mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .header("X-Clinicflow-Tenant",tenant)
+                .header("Idempotency-Key",key).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"content":"%s"}
+                    """.formatted(correctionText)))
+            .andExpect(status().isForbidden());
+
+        mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .header("Idempotency-Key",UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"content\":\"   \"}"))
+            .andExpect(status().isBadRequest());
+
+        var first=mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .header("Idempotency-Key",key).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"content":"%s"}
+                    """.formatted(correctionText)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.content").value(correctionText))
+            .andExpect(jsonPath("$.acknowledgedAt").isEmpty())
+            .andReturn();
+
+        var idMatcher=java.util.regex.Pattern.compile(
+            "\"id\"\\s*:\\s*\"([^\"]+)\"")
+            .matcher(first.getResponse().getContentAsString());
+        assertTrue(idMatcher.find());
+        UUID correctionId=UUID.fromString(idMatcher.group(1));
+
+        mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .header("Idempotency-Key",key).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"content":"%s"}
+                    """.formatted(correctionText)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").value(correctionId.toString()));
+
+        mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .header("Idempotency-Key",key).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":\"different correction\"}"))
+            .andExpect(status().isConflict());
+
+        mvc.perform(get("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(otherNurse)))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isNotFound());
+
+        mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(otherNurse)))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .header("Idempotency-Key",UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":\"unauthorized correction\"}"))
+            .andExpect(status().isNotFound());
+
+        mvc.perform(get("/api/v1/practitioner/nursing-observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(otherDoctor)))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isNotFound());
+
+        mvc.perform(post("/api/v1/practitioner/nursing-observations/"+appointment+"/acknowledge")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(dEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"));
+
+        mvc.perform(get("/api/v1/practitioner/nursing-observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(dEmail))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(1))
+            .andExpect(jsonPath("$.items[0].acknowledgedAt").isEmpty());
+
+        assertThrows(DataAccessException.class,()->jdbc.update("""
+            UPDATE nursing_observation_addenda SET content='overwritten'
+            WHERE tenant_id=:tenant AND id=:id
+            """,Map.of("tenant",tenant,"id",correctionId)));
+        assertThrows(DataAccessException.class,()->jdbc.update("""
+            DELETE FROM nursing_observation_addenda
+            WHERE tenant_id=:tenant AND id=:id
+            """,Map.of("tenant",tenant,"id",correctionId)));
+
+        String receipt="/api/v1/practitioner/nursing-observations/"
+            +appointment+"/addenda/"+correctionId+"/acknowledge";
+
+        mvc.perform(post(receipt)
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(otherDoctor)))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isNotFound());
+
+        assertThrows(DataAccessException.class,()->jdbc.update("""
+            UPDATE nursing_observation_addenda
+            SET acknowledged_at=now(),acknowledged_by=:wrongDoctor
+            WHERE tenant_id=:tenant AND id=:id
+            """,Map.of("tenant",tenant,"id",correctionId,
+                "wrongDoctor",otherDoctor)));
+        mvc.perform(post(receipt)
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(dEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.acknowledgedBy").value(doctor.toString()));
+        mvc.perform(post(receipt)
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(dEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.acknowledgedBy").value(doctor.toString()));
+
+        assertEquals(1,jdbc.queryForObject("""
+            SELECT count(*) FROM nursing_observation_addenda
+            WHERE tenant_id=:tenant AND observation_id=(
+              SELECT id FROM nursing_observations
+              WHERE tenant_id=:tenant AND appointment_id=:appointment)
+            """,Map.of("tenant",tenant,"appointment",appointment),Integer.class));
+
+        mvc.perform(get("/api/v1/nursing/observations/history")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].correctionCount").value(1));
+
+        jdbc.update("""
+            DELETE FROM nursing_unit_assignments
+            WHERE tenant_id=:tenant AND nurse_user_id=:nurse AND unit_id=:unit
+            """,Map.of("tenant",tenant,"nurse",nurse,"unit",unit));
+
+        mvc.perform(get("/api/v1/nursing/observations/history")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isNotFound());
+
+        mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .header("Idempotency-Key",key).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":\"Correction after revoked assignment\"}"))
+            .andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/practitioner/nursing-observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(dEmail))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
+    }
+
     private UUID tenant(String name){
         UUID id=UUID.randomUUID();
         jdbc.update("INSERT INTO organizations(id,name) VALUES(:id,:name)",Map.of("id",id,"name",name));

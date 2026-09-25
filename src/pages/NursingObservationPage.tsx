@@ -291,6 +291,10 @@ export default function NursingObservationPage() {
               Recepção confirmada em {recordedAt(note.acknowledgedAt)}. Esta confirmação
               não é uma validação clínica ou assinatura do conteúdo.
             </p>}
+            <Button variant="outline"
+              onClick={()=>navigate("/enfermagem/historico/"+encodeURIComponent(note.appointmentId))}>
+              Ver histórico e acrescentar correcção
+            </Button>
           </div>}
         {message&&<p role="status" className="rounded-lg border p-3 text-sm">{message}</p>}
       </>}
@@ -301,7 +305,7 @@ export default function NursingObservationPage() {
           <AlertDialogTitle>Submeter a observação?</AlertDialogTitle>
           <AlertDialogDescription>
             O médico atribuído poderá consultar o registo. O original ficará
-            permanentemente imutável; não existe ainda um fluxo de correcções.
+            permanentemente imutável; eventuais correcções serão registadas como novas entradas aditivas.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

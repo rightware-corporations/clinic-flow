@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, RefreshCw, ShieldCheck } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ObservationReview, { recordedAt } from "@/components/nursing/ObservationReview";
+import PractitionerCorrections from "@/components/nursing/PractitionerCorrections";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -116,6 +117,8 @@ export default function PractitionerNursingObservationPage() {
         {note.status==="ACKNOWLEDGED"&&<p className="border-t pt-4 text-sm">
           Recepção confirmada em {recordedAt(note.acknowledgedAt)}.
         </p>}
+        <PractitionerCorrections key={note.id+"-"+refreshId}
+          appointmentId={note.appointmentId} tenant={tenant}/>
       </article>}
       {message&&<p role="status" className="rounded-lg border p-3 text-sm">{message}</p>}
     </section>

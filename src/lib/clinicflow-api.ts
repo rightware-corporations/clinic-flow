@@ -614,3 +614,83 @@ export function acknowledgeNursingObservation(appointmentId: string): Promise<Nu
     activeTenantId(), "POST",
   );
 }
+
+
+// CF-N03: author-only history and immutable, idempotent corrections.
+export type NursingHistoryItem = {
+  observationId:string;
+  appointmentId:string;
+  patientName:string;
+  unitName:string;
+  serviceName:string;
+  startsAt:string;
+  status:NursingObservation["status"];
+  createdAt:string;
+  submittedAt:string|null;
+  acknowledgedAt:string|null;
+  correctionCount:number;
+};
+export type NursingHistoryPage = {
+  items:NursingHistoryItem[];total:number;page:number;size:number;
+};
+export type NursingCorrection = {
+  id:string;observationId:string;authorId:string;content:string;
+  createdAt:string;acknowledgedAt:string|null;acknowledgedBy:string|null;
+};
+export type NursingCorrectionPage = {
+  items:NursingCorrection[];total:number;page:number;size:number;
+};
+
+export function listOwnNursingHistory(page=0):Promise<NursingHistoryPage> {
+  return tenantGet<NursingHistoryPage>(
+    "/api/v1/nursing/observations/history?"+new URLSearchParams({page:String(page)}),
+    activeTenantId(),
+  );
+}
+export function getOwnNursingHistoryDetail(appointmentId:string):Promise<NursingHistoryItem> {
+  return tenantGet<NursingHistoryItem>(
+    "/api/v1/nursing/observations/history/"+encodeURIComponent(appointmentId),
+    activeTenantId(),
+  );
+}
+export function listOwnNursingCorrections(appointmentId:string,page=0):Promise<NursingCorrectionPage> {
+  return tenantGet<NursingCorrectionPage>(
+    "/api/v1/nursing/observations/"+encodeURIComponent(appointmentId)+
+      "/addenda?"+new URLSearchParams({page:String(page)}),
+    activeTenantId(),
+  );
+}
+export function listPractitionerNursingCorrections(appointmentId:string,page=0):Promise<NursingCorrectionPage> {
+  return tenantGet<NursingCorrectionPage>(
+    "/api/v1/practitioner/nursing-observations/"+encodeURIComponent(appointmentId)+
+      "/addenda?"+new URLSearchParams({page:String(page)}),
+    activeTenantId(),
+  );
+}
+export async function createNursingCorrection(
+  appointmentId:string,content:string,idempotencyKey:string,
+):Promise<NursingCorrection> {
+  if(!csrf)await refreshCsrf();
+  return readJson<NursingCorrection>(await fetch(
+    "/api/v1/nursing/observations/"+encodeURIComponent(appointmentId)+"/addenda",
+    {
+      method:"POST",credentials:"same-origin",
+      headers:{
+        "X-Clinicflow-Tenant":activeTenantId(),
+        "Idempotency-Key":idempotencyKey,
+        "Content-Type":"application/json",
+        [csrf!.header]:csrf!.token,
+      },
+      body:JSON.stringify({content:content.trim()}),
+    },
+  ));
+}
+export function acknowledgeNursingCorrection(
+  appointmentId:string,correctionId:string,
+):Promise<NursingCorrection> {
+  return tenantMutation<NursingCorrection>(
+    "/api/v1/practitioner/nursing-observations/"+encodeURIComponent(appointmentId)
+      +"/addenda/"+encodeURIComponent(correctionId)+"/acknowledge",
+    activeTenantId(),"POST",
+  );
+}
