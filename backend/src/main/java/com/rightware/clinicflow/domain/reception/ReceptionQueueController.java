@@ -49,12 +49,13 @@ public class ReceptionQueueController {
         @RequestParam(required=false) UUID unitId, Authentication auth) {
         var actor=requireReception(auth,tenant);
         var args=new MapSqlParameterSource().addValue("tenant",tenant)
-            .addValue("date",date).addValue("unit",unitId);
-        var result=jdbc.query(DETAILS+"""
-            WHERE c.tenant_id=:tenant AND a.starts_at::date=:date
-              AND (:unit IS NULL OR a.unit_id=:unit)
-            ORDER BY c.arrived_at,c.id LIMIT 1000
-            """,args,(rs,n)->row(rs));
+            .addValue("date",date);
+        String unitFilter="";
+        if(unitId!=null){args.addValue("unit",unitId);unitFilter=" AND a.unit_id=:unit";}
+        var result=jdbc.query(DETAILS+
+            " WHERE c.tenant_id=:tenant AND a.starts_at::date=:date"+
+            unitFilter+" ORDER BY c.arrived_at,c.id LIMIT 1000",
+            args,(rs,n)->row(rs));
         audit.write(tenant,actor.userId(),"RECEPTION_QUEUE_VIEWED","Organization",tenant);
         return result;
     }
