@@ -65,7 +65,7 @@ describe("CF-R01 reception workbench", () => {
   it("does not offer duplicate arrival, and calls only waiting patients", async () => {
     vi.mocked(listReceptionQueue).mockResolvedValue([entry]);
     mount();
-    expect(await screen.findByText("Em espera")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Chamar/ })).toBeInTheDocument();
     expect(await screen.findByText("Paciente do servidor")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Registar chegada" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Chamar/ }));
