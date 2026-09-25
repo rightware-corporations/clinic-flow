@@ -280,6 +280,20 @@ export function rescheduleAppointment(
 }
 
 
+// CF-C01: read-only arrival signals; never expose the reception queue to practitioners.
+export type PractitionerArrivalRecord = {
+  appointmentId: string;
+  queueStatus: "WAITING" | "CALLED";
+  arrivedAt: string;
+  calledAt: string | null;
+};
+export function listMyPatientArrivals(date: string): Promise<PractitionerArrivalRecord[]> {
+  const params = new URLSearchParams({ date });
+  return tenantGet<PractitionerArrivalRecord[]>(
+    "/api/v1/practitioner/arrivals?" + params, activeTenantId(),
+  );
+}
+
 // CF-R01: check-in and reception queue are administrative, never a clinical encounter.
 export type ReceptionQueueEntry = {
   id: string; appointmentId: string; arrivedAt: string;

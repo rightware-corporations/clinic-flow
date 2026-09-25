@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  activeTenantId, listAppointments, listClinicalReports,
+  activeTenantId, listAppointments, listClinicalReports, listMyPatientArrivals,
   type ClinicAppointment, type ClinicalReportSummary,
 } from "@/lib/clinicflow-api";
 
@@ -38,6 +38,16 @@ export default function PractitionerDashboard(){
     },
     staleTime:10_000,
   });
+  // Independent query: reception API failure must not hide the clinician's own agenda.
+  const arrivals=useQuery({
+    queryKey:["practitioner-arrivals",tenant,today],
+    queryFn:()=>listMyPatientArrivals(today),
+    staleTime:5_000,
+    refetchInterval:30_000,
+  });
+  const arrivalsByAppointment=new Map(
+    (arrivals.data??[]).map(item=>[item.appointmentId,item]),
+  );
   const current=dashboard.data;
   const stats=current?[
     {label:"Consultas hoje",value:current.appointments.length,icon:CalendarDays},
@@ -57,7 +67,8 @@ export default function PractitionerDashboard(){
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" className="gap-2" onClick={()=>void dashboard.refetch()}>
+          <Button variant="outline" className="gap-2"
+            onClick={()=>{void dashboard.refetch();void arrivals.refetch();}}>
             <RefreshCw className="w-4 h-4"/> Actualizar
           </Button>
           <Button className="gap-2" onClick={()=>navigate("/marcacoes")}>
@@ -95,6 +106,15 @@ export default function PractitionerDashboard(){
               <div>
                 <h2 className="font-semibold">Consultas de hoje</h2>
                 <p className="text-xs text-muted-foreground">{today} · agenda própria</p>
+                {arrivals.isSuccess&&<p className="text-xs text-muted-foreground mt-1">
+                  {arrivals.data.length} chegadas registadas nas suas consultas
+                </p>}
+                {arrivals.isPending&&<p className="text-xs text-muted-foreground mt-1">
+                  A verificar chegadas...
+                </p>}
+                {arrivals.isError&&<p role="alert" className="text-xs text-destructive mt-1">
+                  Estado de chegada indisponível.
+                </p>}
               </div>
               <Button variant="outline" size="sm" onClick={()=>navigate("/marcacoes")}>
                 Gerir consultas
@@ -114,6 +134,17 @@ export default function PractitionerDashboard(){
                   <Badge variant={item.status==="CANCELLED"?"destructive":"secondary"}>
                     {statuses[item.status]}
                   </Badge>
+                  {item.status==="CONFIRMED"&&arrivals.isSuccess&&<p className="mt-2">
+                    {arrivalsByAppointment.has(item.id)
+                      ? <Badge variant={arrivalsByAppointment.get(item.id)?.queueStatus==="CALLED"
+                          ?"default":"outline"}>
+                          {arrivalsByAppointment.get(item.id)?.queueStatus==="CALLED"
+                            ?"Chamado pela recepção":"Chegada registada"}
+                        </Badge>
+                      : <span className="text-xs text-muted-foreground">
+                          Sem chegada registada
+                        </span>}
+                  </p>}
                 </div>
               </div>)}
               {current.appointments.length===0&&<p className="text-center text-sm text-muted-foreground p-10">
