@@ -210,6 +210,8 @@ public class AppointmentController {
         }
         LocalDateTime end=availability.requireSlot(tenant,before.patientId(),
             before.practitionerUserId(),input.unitId(),before.serviceId(),input.startsAt());
+        lockAppointment(tenant,id);
+        rejectIfCheckedIn(tenant,id);
         int changed=jdbc.update("""
             UPDATE appointments SET unit_id=:unit,starts_at=:start,ends_at=:end,
                 version=version+1,updated_at=now()
@@ -229,7 +231,9 @@ public class AppointmentController {
     private AppointmentView transition(UUID tenant,UUID id,long version,
         Authentication auth,String action,String next,Set<String> allowed,boolean professionalAllowed){
         var actor=tenants.requireMembership(auth,tenant);
+        lockAppointment(tenant,id);
         var before=find(tenant,id);
+        if(action.equals("CANCEL")||action.equals("NO_SHOW"))rejectIfCheckedIn(tenant,id);
         if(professionalAllowed){
             boolean clinicAdmin=actor.role().equals("CLINIC_ADMIN");
             boolean own=actor.role().equals("PRACTITIONER")
@@ -254,6 +258,22 @@ public class AppointmentController {
             before.startsAt(),before.startsAt());
         audit.write(tenant,actor.userId(),"APPOINTMENT_"+action,"Appointment",id);
         return find(tenant,id);
+    }
+
+    private void lockAppointment(UUID tenant,UUID id){
+        jdbc.queryForList("""
+            SELECT id FROM appointments WHERE tenant_id=:tenant AND id=:id FOR UPDATE
+            """,Map.of("tenant",tenant,"id",id),UUID.class);
+    }
+
+    private void rejectIfCheckedIn(UUID tenant,UUID id){
+        Integer count=jdbc.queryForObject("""
+            SELECT count(*) FROM reception_checkins
+            WHERE tenant_id=:tenant AND appointment_id=:id
+            """,Map.of("tenant",tenant,"id",id),Integer.class);
+        if(count!=null&&count>0){
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"PATIENT_ALREADY_CHECKED_IN");
+        }
     }
 
     private TenantAccessService.TenantAccess requireReception(Authentication auth,UUID tenant){
