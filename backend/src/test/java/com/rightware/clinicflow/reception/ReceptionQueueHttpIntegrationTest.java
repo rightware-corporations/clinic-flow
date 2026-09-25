@@ -54,18 +54,19 @@ class ReceptionQueueHttpIntegrationTest {
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.error").value("STALE_APPOINTMENT_VERSION"));
 
-        var first=mvc.perform(post("/api/v1/reception/check-ins")
+        mvc.perform(post("/api/v1/reception/check-ins")
             .with(user(email(f.reception()))).with(csrf())
             .header("X-Clinicflow-Tenant",f.tenant())
             .contentType(MediaType.APPLICATION_JSON)
             .content(checkInBody(f.appointment(),2)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.queueStatus").value("WAITING"))
-            .andExpect(jsonPath("$.patientName").isNotEmpty())
-            .andReturn();
-        String payload=first.getResponse().getContentAsString();
-        UUID checkin=UUID.fromString(
-            new com.fasterxml.jackson.databind.ObjectMapper().readTree(payload).get("id").asText());
+            .andExpect(jsonPath("$.patientName").isNotEmpty());
+        UUID checkin=jdbc.queryForObject("""
+            SELECT id FROM reception_checkins
+            WHERE tenant_id=:tenant AND appointment_id=:appointment
+            """,Map.of("tenant",f.tenant(),"appointment",f.appointment()),UUID.class);
+        assertNotNull(checkin);
 
         mvc.perform(post("/api/v1/reception/check-ins")
             .with(user(email(f.admin()))).with(csrf())
