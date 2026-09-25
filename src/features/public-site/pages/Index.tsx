@@ -1,4 +1,4 @@
-import Layout from "@/components/layout/Layout";
+import Layout from "@/features/public-site/components/Layout";
 import HeroSection from "@/features/public-site/components/HeroSection";
 import ServiceCategoryGrid from "@/features/public-site/components/ServiceCategoryGrid";
 import FeaturedServices from "@/features/public-site/components/FeaturedServices";
