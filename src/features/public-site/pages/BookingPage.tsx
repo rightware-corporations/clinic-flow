@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import Layout from "@/components/layout/Layout";
+import Layout from "@/features/public-site/components/Layout";
 import { services, categoryLabels, type Service } from "@/data/services";
 import { practitioners, getPractitionersByCategory, type Practitioner } from "@/data/practitioners";
 import { generateSlots, type TimeSlot } from "@/data/slots";
