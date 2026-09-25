@@ -201,6 +201,12 @@ public class UserInvitationController {
             INSERT INTO tenant_memberships(tenant_id,user_id,role)
             VALUES(:tenant,:user,:role)
             """,Map.of("tenant",invite.tenantId(),"user",userId,"role",invite.role()));
+        if("NURSE".equals(invite.role())) {
+            jdbc.update("""
+                INSERT INTO nursing_profiles(tenant_id,user_id)
+                VALUES(:tenant,:user)
+                """,Map.of("tenant",invite.tenantId(),"user",userId));
+        }
         int used=jdbc.update("""
             UPDATE user_invitations SET accepted_at=now(),accepted_by=:user
             WHERE id=:id AND accepted_at IS NULL AND revoked_at IS NULL
@@ -250,7 +256,7 @@ public class UserInvitationController {
     public record InvitationInput(
         @Email @NotBlank @Size(max=254) String email,
         @NotBlank @Size(max=160) String displayName,
-        @NotBlank @Pattern(regexp="RECEPTION|PRACTITIONER|INTERN") String role) {}
+        @NotBlank @Pattern(regexp="RECEPTION|PRACTITIONER|NURSE|INTERN") String role) {}
     public record AcceptInvitation(
         @Size(max=128) String password,
         @Size(max=128) String existingAccountPassword) {}

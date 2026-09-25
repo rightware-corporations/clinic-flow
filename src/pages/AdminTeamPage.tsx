@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Copy, MailPlus, RefreshCw, ShieldCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ import {
 const roles: {value:InvitationRole;label:string;description:string}[] = [
   {value:"RECEPTION",label:"Recepção",description:"Pacientes e marcações administrativas"},
   {value:"PRACTITIONER",label:"Profissional clínico",description:"Agenda e documentação clínica própria"},
+  {value:"NURSE",label:"Enfermagem",description:"Acesso apenas às unidades clínicas atribuídas"},
   {value:"INTERN",label:"Interno",description:"Acesso restrito; sem conteúdo clínico neste core"},
 ];
 
@@ -94,6 +96,7 @@ export default function AdminTeamPage(){
           <Button variant="outline" className="gap-2" onClick={()=>void invitations.refetch()}>
             <RefreshCw className="w-4 h-4"/> Actualizar
           </Button>
+          <Button asChild variant="outline" className="gap-2"><Link to="/equipa/enfermagem">Unidades de enfermagem</Link></Button>
           <Button className="gap-2" onClick={()=>setOpen(true)}>
             <UserPlus className="w-4 h-4"/> Novo convite
           </Button>

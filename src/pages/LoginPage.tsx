@@ -14,6 +14,7 @@ function dashboardFor(role: ClinicMembership["role"]): string {
     case "CLINIC_ADMIN": return "/admin";
     case "RECEPTION": return "/staff";
     case "PRACTITIONER": return "/profissional";
+    case "NURSE": return "/enfermagem";
     case "INTERN": return "/interno";
     case "PATIENT": return "/paciente";
   }
@@ -23,6 +24,7 @@ const displayRole: Record<ClinicMembership["role"], string> = {
   CLINIC_ADMIN: "admin",
   RECEPTION: "staff",
   PRACTITIONER: "profissional",
+  NURSE: "enfermagem",
   INTERN: "interno",
   PATIENT: "paciente",
 };

@@ -18,6 +18,8 @@ import SuperDashboard from "./pages/SuperDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
 import ReceptionQueuePage from "./pages/ReceptionQueuePage";
 import InternDashboard from "./pages/InternDashboard";
+import NursingDashboardPage from "./pages/NursingDashboardPage";
+import AdminNursingAssignmentsPage from "./pages/AdminNursingAssignmentsPage";
 import CategoryPage from "./pages/CategoryPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
@@ -62,6 +64,8 @@ function AnimatedRoutes() {
         <Route path="/staff" element={<ProtectedRoute allowedRoles={["staff"]}><StaffDashboard /></ProtectedRoute>} />
         <Route path="/recepcao/fila" element={<ProtectedRoute allowedRoles={["staff","admin"]}><ReceptionQueuePage /></ProtectedRoute>} />
         <Route path="/interno" element={<ProtectedRoute allowedRoles={["interno"]}><InternDashboard /></ProtectedRoute>} />
+        <Route path="/enfermagem" element={<ProtectedRoute allowedRoles={["enfermagem"]}><NursingDashboardPage /></ProtectedRoute>} />
+        <Route path="/equipa/enfermagem" element={<ProtectedRoute allowedRoles={["admin"]}><AdminNursingAssignmentsPage /></ProtectedRoute>} />
         
         {/* Medical system — doctors, staff, admins, interns (read-only) */}
         <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["profissional"]}><MedicalReportsPage /></ProtectedRoute>} />
