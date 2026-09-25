@@ -14,10 +14,17 @@ export type CurrentUser = {
 
 let csrf: { header: string; token: string } | null = null;
 
-async function readJson<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    throw new Error(`ClinicFlow API returned ${response.status}`);
+export class ClinicFlowApiError extends Error {
+  constructor(readonly status: number) {
+    super("ClinicFlow API returned " + status);
+    this.name = "ClinicFlowApiError";
   }
+}
+export function isClinicFlowApiError(error: unknown, status?: number): error is ClinicFlowApiError {
+  return error instanceof ClinicFlowApiError && (status === undefined || error.status === status);
+}
+async function readJson<T>(response: Response): Promise<T> {
+  if (!response.ok) throw new ClinicFlowApiError(response.status);
   return response.json() as Promise<T>;
 }
 
@@ -540,5 +547,70 @@ export function listMyNursingUnits():Promise<NursingUnit[]>{
 export function listNursingArrivals(date:string):Promise<NursingArrival[]>{
   return tenantGet<NursingArrival[]>(
     "/api/v1/nursing/arrivals?"+new URLSearchParams({date}),activeTenantId(),
+  );
+}
+
+
+// CF-N02: tenant-bound observations; no triage classification or inferred values.
+export type NursingMeasurements = {
+  temperatureC: number | null;
+  heartRate: number | null;
+  respiratoryRate: number | null;
+  spo2Percent: number | null;
+  systolicMmhg: number | null;
+  diastolicMmhg: number | null;
+};
+export type NursingObservation = {
+  id: string;
+  appointmentId: string;
+  status: "DRAFT" | "SUBMITTED" | "ACKNOWLEDGED";
+  presentingConcern: string;
+  observationNotes: string;
+  measurements: NursingMeasurements;
+  measuredAt: string | null;
+  version: number;
+  submittedAt: string | null;
+  acknowledgedAt: string | null;
+  acknowledgedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+export type NursingObservationInput = {
+  presentingConcern: string;
+  observationNotes: string;
+  measurements: NursingMeasurements;
+  measuredAt: string | null;
+};
+export function getNursingObservation(appointmentId: string): Promise<NursingObservation> {
+  return tenantGet<NursingObservation>(
+    "/api/v1/nursing/observations/" + encodeURIComponent(appointmentId), activeTenantId(),
+  );
+}
+export function createNursingObservation(appointmentId: string, input: NursingObservationInput): Promise<NursingObservation> {
+  return tenantMutation<NursingObservation>(
+    "/api/v1/nursing/observations", activeTenantId(), "POST", { appointmentId, ...input },
+  );
+}
+export function updateNursingObservation(appointmentId: string, version: number, input: NursingObservationInput): Promise<NursingObservation> {
+  return tenantMutation<NursingObservation>(
+    "/api/v1/nursing/observations/" + encodeURIComponent(appointmentId),
+    activeTenantId(), "PUT", { version, ...input },
+  );
+}
+export function submitNursingObservation(appointmentId: string, version: number): Promise<NursingObservation> {
+  return tenantMutation<NursingObservation>(
+    "/api/v1/nursing/observations/" + encodeURIComponent(appointmentId) + "/submit",
+    activeTenantId(), "POST", { version },
+  );
+}
+export function getPractitionerNursingObservation(appointmentId: string): Promise<NursingObservation> {
+  return tenantGet<NursingObservation>(
+    "/api/v1/practitioner/nursing-observations/" + encodeURIComponent(appointmentId), activeTenantId(),
+  );
+}
+export function acknowledgeNursingObservation(appointmentId: string): Promise<NursingObservation> {
+  return tenantMutation<NursingObservation>(
+    "/api/v1/practitioner/nursing-observations/" + encodeURIComponent(appointmentId) + "/acknowledge",
+    activeTenantId(), "POST",
   );
 }
