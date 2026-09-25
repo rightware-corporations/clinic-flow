@@ -9,7 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import Layout from "@/components/layout/Layout";
+import Layout from "@/features/public-site/components/Layout";
 import { getServiceBySlug, categoryLabels, services } from "@/data/services";
 
 export default function ServiceDetailPage() {
