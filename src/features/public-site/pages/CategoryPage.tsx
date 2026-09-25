@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Layout from "@/components/layout/Layout";
+import Layout from "@/features/public-site/components/Layout";
 import {
   services, categoryLabels, type ServiceCategory,
 } from "@/data/services";
