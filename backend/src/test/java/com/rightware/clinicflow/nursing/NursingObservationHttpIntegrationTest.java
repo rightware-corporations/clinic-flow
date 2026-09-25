@@ -419,6 +419,14 @@ class NursingObservationHttpIntegrationTest {
                 .header("X-Clinicflow-Tenant",tenant))
             .andExpect(status().isNotFound());
 
+        mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(otherNurse)))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .header("Idempotency-Key",UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":\"unauthorized correction\"}"))
+            .andExpect(status().isNotFound());
+
         mvc.perform(get("/api/v1/practitioner/nursing-observations/"+appointment+"/addenda")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(otherDoctor)))
                 .header("X-Clinicflow-Tenant",tenant))
@@ -448,6 +456,18 @@ class NursingObservationHttpIntegrationTest {
 
         String receipt="/api/v1/practitioner/nursing-observations/"
             +appointment+"/addenda/"+correctionId+"/acknowledge";
+
+        mvc.perform(post(receipt)
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(email(otherDoctor)))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isNotFound());
+
+        assertThrows(DataAccessException.class,()->jdbc.update("""
+            UPDATE nursing_observation_addenda
+            SET acknowledged_at=now(),acknowledged_by=:wrongDoctor
+            WHERE tenant_id=:tenant AND id=:id
+            """,Map.of("tenant",tenant,"id",correctionId,
+                "wrongDoctor",otherDoctor)));
         mvc.perform(post(receipt)
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(dEmail))
                 .with(csrf()).header("X-Clinicflow-Tenant",tenant))
@@ -484,6 +504,13 @@ class NursingObservationHttpIntegrationTest {
         mvc.perform(get("/api/v1/nursing/observations/"+appointment+"/addenda")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
                 .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isNotFound());
+
+        mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .header("Idempotency-Key",key).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":\"Correction after revoked assignment\"}"))
             .andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/practitioner/nursing-observations/"+appointment+"/addenda")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(dEmail))
