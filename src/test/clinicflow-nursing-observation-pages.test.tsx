@@ -6,6 +6,7 @@ import PractitionerNursingObservationPage from "@/pages/PractitionerNursingObser
 import {
   acknowledgeNursingObservation,createNursingObservation,getNursingObservation,
   getPractitionerNursingObservation,listMyNursingUnits,listNursingArrivals,
+  listPractitionerNursingCorrections,
   submitNursingObservation,updateNursingObservation,
 } from "@/lib/clinicflow-api";
 
@@ -21,6 +22,7 @@ vi.mock("@/lib/clinicflow-api",async(importOriginal)=>{
     getNursingObservation:vi.fn(),createNursingObservation:vi.fn(),
     updateNursingObservation:vi.fn(),submitNursingObservation:vi.fn(),
     getPractitionerNursingObservation:vi.fn(),acknowledgeNursingObservation:vi.fn(),
+    listPractitionerNursingCorrections:vi.fn(),
   };
 });
 
@@ -69,6 +71,9 @@ beforeEach(()=>{
   vi.mocked(submitNursingObservation).mockReset().mockResolvedValue(submitted);
   vi.mocked(getPractitionerNursingObservation).mockReset().mockResolvedValue(submitted);
   vi.mocked(acknowledgeNursingObservation).mockReset().mockResolvedValue(acknowledged);
+  vi.mocked(listPractitionerNursingCorrections).mockReset().mockResolvedValue({
+    items:[],total:0,page:0,size:20,
+  });
 });
 afterEach(()=>vi.clearAllMocks());
 
