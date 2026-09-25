@@ -1,10 +1,10 @@
 import Layout from "@/components/layout/Layout";
-import HeroSection from "@/components/home/HeroSection";
-import ServiceCategoryGrid from "@/components/home/ServiceCategoryGrid";
-import FeaturedServices from "@/components/home/FeaturedServices";
-import AboutSection from "@/components/home/AboutSection";
-import FAQSection from "@/components/home/FAQSection";
-import CTASection from "@/components/home/CTASection";
+import HeroSection from "@/features/public-site/components/HeroSection";
+import ServiceCategoryGrid from "@/features/public-site/components/ServiceCategoryGrid";
+import FeaturedServices from "@/features/public-site/components/FeaturedServices";
+import AboutSection from "@/features/public-site/components/AboutSection";
+import FAQSection from "@/features/public-site/components/FAQSection";
+import CTASection from "@/features/public-site/components/CTASection";
 
 const Index = () => {
   return (
