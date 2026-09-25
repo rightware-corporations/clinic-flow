@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Layout from "@/components/layout/Layout";
+import Layout from "@/features/public-site/components/Layout";
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Clock, Send, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
