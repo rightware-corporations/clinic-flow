@@ -150,7 +150,7 @@ export default function ReceptionQueuePage() {
         <div className="rounded-lg border bg-card px-5 py-4">
           <p className="text-xs text-muted-foreground">Por chegar</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums">
-            {appointments.isSuccess && (!unit || allArrivals.isSuccess) ? waitingArrival.length : "—"}
+            {appointments.isSuccess && queue.isSuccess && (!unit || allArrivals.isSuccess) ? waitingArrival.length : "—"}
           </p>
         </div>
         <div className="rounded-lg border bg-card px-5 py-4">
@@ -192,7 +192,7 @@ export default function ReceptionQueuePage() {
           {unit && allArrivals.isError && <p role="alert" className="p-6 text-sm text-destructive">
             Não foi possível verificar a fila completa. Actualize antes de registar.
           </p>}
-          {appointments.isSuccess && (!unit || allArrivals.isSuccess) &&
+          {appointments.isSuccess && queue.isSuccess && (!unit || allArrivals.isSuccess) &&
             <div className="divide-y">
               {candidates.map(item => <div key={item.id}
                 className="flex flex-wrap items-center justify-between gap-3 p-4">
