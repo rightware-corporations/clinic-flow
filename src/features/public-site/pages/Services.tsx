@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import Layout from "@/components/layout/Layout";
+import Layout from "@/features/public-site/components/Layout";
 import { services, categoryLabels, type ServiceCategory } from "@/data/services";
 import { cn } from "@/lib/utils";
 
