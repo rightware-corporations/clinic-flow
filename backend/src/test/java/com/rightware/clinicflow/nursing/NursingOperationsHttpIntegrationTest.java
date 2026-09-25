@@ -31,11 +31,11 @@ class NursingOperationsHttpIntegrationTest {
     void nurseInviteStartsWithZeroAccessThenAdminAssignmentScopesArrivals() throws Exception {
         UUID tenant=tenant("Nursing Clinic");
         UUID otherTenant=tenant("Foreign Clinic");
-        UUID admin=user(tenant,"CLINIC_ADMIN");
-        UUID reception=user(tenant,"RECEPTION");
-        UUID doctor=user(tenant,"PRACTITIONER");
-        UUID foreignAdmin=user(otherTenant,"CLINIC_ADMIN");
-        UUID foreignNurse=user(otherTenant,"NURSE");
+        UUID admin=createSyntheticUser(tenant,"CLINIC_ADMIN");
+        UUID reception=createSyntheticUser(tenant,"RECEPTION");
+        UUID doctor=createSyntheticUser(tenant,"PRACTITIONER");
+        UUID foreignAdmin=createSyntheticUser(otherTenant,"CLINIC_ADMIN");
+        UUID foreignNurse=createSyntheticUser(otherTenant,"NURSE");
         nursingProfile(otherTenant,foreignNurse);
 
         UUID assignedUnit=unit(tenant,"Assigned Unit",true);
@@ -192,8 +192,8 @@ class NursingOperationsHttpIntegrationTest {
     @Test
     void assignmentMutationRequiresCsrfAndClinicAdmin() throws Exception {
         UUID tenant=tenant("Nursing Security");
-        UUID admin=user(tenant,"CLINIC_ADMIN");
-        UUID nurse=user(tenant,"NURSE");
+        UUID admin=createSyntheticUser(tenant,"CLINIC_ADMIN");
+        UUID nurse=createSyntheticUser(tenant,"NURSE");
         nursingProfile(tenant,nurse);
         UUID target=unit(tenant,"Target",true);
 
@@ -226,7 +226,7 @@ class NursingOperationsHttpIntegrationTest {
         jdbc.update("INSERT INTO organizations(id,name) VALUES(:id,:name)",Map.of("id",id,"name",name));
         return id;
     }
-    private UUID user(UUID tenant,String role){
+    private UUID createSyntheticUser(UUID tenant,String role){
         UUID id=UUID.randomUUID();
         jdbc.update("""
             INSERT INTO users(id,email,display_name,password_hash)
