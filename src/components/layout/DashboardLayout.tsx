@@ -78,6 +78,11 @@ function getMenuItems(role: string): NavItem[] {
         { label: "Pacientes", href: "/pacientes", icon: Users },
         ...common,
       ];
+    case "enfermagem":
+      return [
+        { label: "Enfermagem", href: "/enfermagem", icon: ClipboardList },
+        ...common,
+      ];
     case "interno":
       return [
         { label: "Dashboard", href: "/interno", icon: LayoutDashboard },
@@ -99,6 +104,7 @@ function getRoleLabel(role: string): string {
   const labels: Record<string, string> = {
     admin: "Administrador",
     profissional: "Médico",
+    enfermagem: "Enfermagem",
     staff: "Funcionário",
     interno: "Interno",
     paciente: "Paciente",
@@ -110,6 +116,7 @@ function getRoleBadgeClass(role: string): string {
   const classes: Record<string, string> = {
     admin: "bg-destructive/10 text-destructive",
     profissional: "bg-primary/10 text-primary",
+    enfermagem: "bg-primary/10 text-primary",
     staff: "bg-secondary/10 text-secondary",
     interno: "bg-warning/10 text-warning",
     paciente: "bg-accent/10 text-accent",

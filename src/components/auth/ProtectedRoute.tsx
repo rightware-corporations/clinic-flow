@@ -2,17 +2,18 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { me, type ClinicMembership } from "@/lib/clinicflow-api";
 
-type LegacyRole = "admin" | "staff" | "profissional" | "interno" | "paciente";
+type LegacyRole = "admin" | "staff" | "profissional" | "enfermagem" | "interno" | "paciente";
 const roleMap: Record<ClinicMembership["role"], LegacyRole> = {
   CLINIC_ADMIN: "admin",
   RECEPTION: "staff",
   PRACTITIONER: "profissional",
+  NURSE: "enfermagem",
   INTERN: "interno",
   PATIENT: "paciente",
 };
 const dashboard: Record<LegacyRole, string> = {
   admin: "/admin", staff: "/staff", profissional: "/profissional",
-  interno: "/interno", paciente: "/paciente",
+  interno: "/interno", paciente: "/paciente", enfermagem: "/enfermagem",
 };
 
 interface ProtectedRouteProps {

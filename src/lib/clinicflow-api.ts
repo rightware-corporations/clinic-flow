@@ -2,7 +2,7 @@
 export type ClinicMembership = {
   tenantId: string;
   clinicName: string;
-  role: "CLINIC_ADMIN" | "RECEPTION" | "PRACTITIONER" | "INTERN" | "PATIENT";
+  role: "CLINIC_ADMIN" | "RECEPTION" | "PRACTITIONER" | "NURSE" | "INTERN" | "PATIENT";
 };
 
 export type CurrentUser = {
@@ -411,7 +411,7 @@ export async function createClinicalAddendum(
 
 
 // CF-B7: secure tenant invitations. Raw tokens are never stored in browser storage.
-export type InvitationRole = "RECEPTION" | "PRACTITIONER" | "INTERN";
+export type InvitationRole = "RECEPTION" | "PRACTITIONER" | "NURSE" | "INTERN";
 export type AdminInvitation = {
   id: string; email: string; displayName: string; role: InvitationRole;
   expiresAt: string; acceptedAt: string | null; revokedAt: string | null; createdAt: string;
@@ -512,5 +512,33 @@ export function setClinicServiceActive(
     "/api/v1/services/" + encodeURIComponent(id)
       + (nextActive ? "/reactivate" : "/deactivate"),
     activeTenantId(), "POST",
+  );
+}
+
+// CF-N01: nursing is scoped to explicit active unit assignments.
+export type NursingUnit = {id:string;name:string};
+export type NursingTeamMember = {
+  userId:string;displayName:string;email:string;version:number;units:NursingUnit[];
+};
+export type NursingArrival = {
+  appointmentId:string;patientName:string;unitId:string;unitName:string;
+  serviceName:string;startsAt:string;appointmentStatus:"CONFIRMED"|"IN_PROGRESS";
+  queueStatus:"WAITING"|"CALLED";arrivedAt:string;calledAt:string|null;
+};
+export function listNursingTeam():Promise<NursingTeamMember[]>{
+  return tenantGet<NursingTeamMember[]>("/api/v1/admin/nursing-team",activeTenantId());
+}
+export function setNursingUnits(userId:string,version:number,unitIds:string[]):Promise<NursingTeamMember>{
+  return tenantMutation<NursingTeamMember>(
+    "/api/v1/admin/nursing-team/"+encodeURIComponent(userId)+"/units",
+    activeTenantId(),"PUT",{version,unitIds},
+  );
+}
+export function listMyNursingUnits():Promise<NursingUnit[]>{
+  return tenantGet<NursingUnit[]>("/api/v1/nursing/units",activeTenantId());
+}
+export function listNursingArrivals(date:string):Promise<NursingArrival[]>{
+  return tenantGet<NursingArrival[]>(
+    "/api/v1/nursing/arrivals?"+new URLSearchParams({date}),activeTenantId(),
   );
 }
