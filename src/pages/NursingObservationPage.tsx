@@ -103,9 +103,10 @@ export default function NursingObservationPage() {
     void (async()=>{
       try {
         // Fresh operational check. The server independently rechecks every clinical request.
-        const [units,arrivals]=await Promise.all([
-          listMyNursingUnits(),listNursingArrivals(deviceDay()),
-        ]);
+        const units=await listMyNursingUnits();
+        if(!live)return;
+        if(units.length===0){setPhase("blocked");return;}
+        const arrivals=await listNursingArrivals(deviceDay());
         if(!live)return;
         const chosen=arrivals.find(item=>item.appointmentId===appointmentId
           &&units.some(unit=>unit.id===item.unitId));
