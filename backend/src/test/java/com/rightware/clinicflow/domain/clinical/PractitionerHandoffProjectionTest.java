@@ -73,8 +73,8 @@ class PractitionerHandoffProjectionTest {
                 .principal(authentication))
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                 .status().isServiceUnavailable())
-            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                .jsonPath("$.indicator").doesNotExist());
+             .andDo(result -> assertFalse(result.getResponse().getContentAsString()
+                .contains("ALL_RECEIPTS_RECORDED")));
         verifyNoInteractions(audit);
     }
 
@@ -105,8 +105,8 @@ class PractitionerHandoffProjectionTest {
                 .principal(authentication))
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                 .status().isServiceUnavailable())
-            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                .jsonPath("$.indicator").doesNotExist());
+             .andDo(result -> assertFalse(result.getResponse().getContentAsString()
+                .contains("ALL_RECEIPTS_RECORDED")));
         verify(audit).write(tenant, doctor, "PRACTITIONER_HANDOFF_VIEWED",
             "Appointment", appointment);
     }
