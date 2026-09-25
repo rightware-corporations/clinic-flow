@@ -51,4 +51,64 @@ class PractitionerHandoffProjectionTest {
         assertEquals("HANDOFF_SOURCE_UNAVAILABLE", error.getReason());
         verifyNoInteractions(audit);
     }
+    @Test
+    void aSourceTimeoutReturnsHttp503WithoutAuditOrFabricatedIndicator() throws Exception {
+        var jdbc = mock(NamedParameterJdbcTemplate.class);
+        var tenants = mock(TenantAccessService.class);
+        var audit = mock(AuditWriter.class);
+        var authentication = mock(Authentication.class);
+        UUID tenant = UUID.randomUUID();
+        UUID doctor = UUID.randomUUID();
+        UUID appointment = UUID.randomUUID();
+        when(tenants.requireMembership(authentication, tenant)).thenReturn(
+            new TenantAccessService.TenantAccess(doctor, tenant, "PRACTITIONER"));
+        when(jdbc.query(anyString(), anyMap(),
+            org.mockito.ArgumentMatchers.<RowMapper<PractitionerHandoffController.Snapshot>>any()))
+            .thenThrow(new org.springframework.dao.QueryTimeoutException("synthetic timeout"));
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(
+            new PractitionerHandoffController(jdbc, tenants, audit)).build();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .get("/api/v1/practitioner/handoffs/" + appointment)
+                .header("X-Clinicflow-Tenant", tenant)
+                .principal(authentication))
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                .status().isServiceUnavailable())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                .jsonPath("$.indicator").doesNotExist());
+        verifyNoInteractions(audit);
+    }
+
+    @Test
+    void anAuditWriteFailureReturnsHttp503AndNeverPublishesASnapshot() throws Exception {
+        var jdbc = mock(NamedParameterJdbcTemplate.class);
+        var tenants = mock(TenantAccessService.class);
+        var audit = mock(AuditWriter.class);
+        var authentication = mock(Authentication.class);
+        UUID tenant = UUID.randomUUID();
+        UUID doctor = UUID.randomUUID();
+        UUID appointment = UUID.randomUUID();
+        when(tenants.requireMembership(authentication, tenant)).thenReturn(
+            new TenantAccessService.TenantAccess(doctor, tenant, "PRACTITIONER"));
+        when(jdbc.query(anyString(), anyMap(),
+            org.mockito.ArgumentMatchers.<RowMapper<PractitionerHandoffController.Snapshot>>any()))
+            .thenReturn(java.util.List.of(new PractitionerHandoffController.Snapshot(
+                appointment, true, "ACKNOWLEDGED", 0, 0)));
+        doThrow(new org.springframework.dao.DataAccessResourceFailureException(
+            "synthetic audit persistence failure"))
+            .when(audit).write(tenant, doctor, "PRACTITIONER_HANDOFF_VIEWED",
+                "Appointment", appointment);
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(
+            new PractitionerHandoffController(jdbc, tenants, audit)).build();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .get("/api/v1/practitioner/handoffs/" + appointment)
+                .header("X-Clinicflow-Tenant", tenant)
+                .principal(authentication))
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                .status().isServiceUnavailable())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                .jsonPath("$.indicator").doesNotExist());
+        verify(audit).write(tenant, doctor, "PRACTITIONER_HANDOFF_VIEWED",
+            "Appointment", appointment);
+    }
+
 }
