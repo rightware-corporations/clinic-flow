@@ -280,6 +280,40 @@ export function rescheduleAppointment(
 }
 
 
+// CF-R01: check-in and reception queue are administrative, never a clinical encounter.
+export type ReceptionQueueEntry = {
+  id: string; appointmentId: string; arrivedAt: string;
+  queueStatus: "WAITING" | "CALLED"; queueVersion: number; calledAt: string | null;
+  appointmentStatus: AppointmentStatus; appointmentVersion: number;
+  startsAt: string; unitId: string; patientName: string;
+  practitionerName: string; unitName: string; serviceName: string;
+};
+
+export function listReceptionQueue(date: string, unitId?: string): Promise<ReceptionQueueEntry[]> {
+  const params = new URLSearchParams({ date });
+  if (unitId) params.set("unitId", unitId);
+  return tenantGet<ReceptionQueueEntry[]>(
+    "/api/v1/reception/queue?" + params, activeTenantId(),
+  );
+}
+
+export function checkInAppointment(
+  appointmentId: string, appointmentVersion: number,
+): Promise<ReceptionQueueEntry> {
+  return tenantMutation<ReceptionQueueEntry>(
+    "/api/v1/reception/check-ins", activeTenantId(), "POST",
+    { appointmentId, appointmentVersion },
+  );
+}
+
+export function callReceptionQueueEntry(id: string, version: number): Promise<ReceptionQueueEntry> {
+  return tenantMutation<ReceptionQueueEntry>(
+    "/api/v1/reception/queue/" + encodeURIComponent(id) + "/call",
+    activeTenantId(), "POST", { version },
+  );
+}
+
+
 // CF-B6B: private clinical reports. Do not persist report content to browser storage.
 export type ClinicalReportType = "CONSULTATION" | "DIAGNOSTIC" | "FOLLOW_UP";
 export type ClinicalReportStatus = "DRAFT" | "FINALIZED";
