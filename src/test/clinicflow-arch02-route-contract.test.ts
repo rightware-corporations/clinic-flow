@@ -39,7 +39,7 @@ const expected = [
 function routeContracts(source: string): string[] {
   return source.split("\n").filter(line => line.includes("<Route path=")).map(line => {
     const path = line.match(/<Route path="([^"]+)"/)?.[1];
-    const roles = line.match(/allowedRoles=\{\[([^\]]+)\]\\}/)?.[1]
+    const roles = line.match(/allowedRoles=\{\[([^\]]+)\]\}/)?.[1]
       ?.replace(/"/g, "").replace(/,\s*/g, ",") ?? "";
     const component = line.match(/<([A-Z]\w+)\s*\/><\/(?:PageTransition|ProtectedRoute)>/)?.[1] ?? "";
     return [path, roles, component].join("|");
