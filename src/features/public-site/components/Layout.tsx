@@ -1,6 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/features/public-site/components/Footer";
-import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import MobileBottomNav from "@/features/public-site/components/MobileBottomNav";
 
 interface LayoutProps {
   children: React.ReactNode;
