@@ -16,6 +16,7 @@ import PractitionerDashboard from "./pages/PractitionerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuperDashboard from "./pages/SuperDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
+import ReceptionQueuePage from "./pages/ReceptionQueuePage";
 import InternDashboard from "./pages/InternDashboard";
 import CategoryPage from "./pages/CategoryPage";
 import AboutPage from "./pages/AboutPage";
@@ -59,6 +60,7 @@ function AnimatedRoutes() {
         <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/super" element={<ProtectedRoute allowedRoles={["platform"]}><SuperDashboard /></ProtectedRoute>} />
         <Route path="/staff" element={<ProtectedRoute allowedRoles={["staff"]}><StaffDashboard /></ProtectedRoute>} />
+        <Route path="/recepcao/fila" element={<ProtectedRoute allowedRoles={["staff","admin"]}><ReceptionQueuePage /></ProtectedRoute>} />
         <Route path="/interno" element={<ProtectedRoute allowedRoles={["interno"]}><InternDashboard /></ProtectedRoute>} />
         
         {/* Medical system — doctors, staff, admins, interns (read-only) */}
