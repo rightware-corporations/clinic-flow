@@ -54,7 +54,7 @@ public class NursingObservationController {
         Authentication auth) {
         var nurse = requireNurse(auth, tenant);
         AppointmentScope scope = requireNurseAppointmentScope(
-            tenant, nurse.userId(), input.appointmentId(), true);
+            tenant, nurse.userId(), input.appointmentId(), true, false);
 
         Integer existing = jdbc.queryForObject("""
             SELECT count(*) FROM nursing_observations
@@ -93,7 +93,7 @@ public class NursingObservationController {
         Authentication auth) {
         var nurse = requireNurse(auth, tenant);
         AppointmentScope scope = requireNurseAppointmentScope(
-            tenant, nurse.userId(), appointmentId, false);
+            tenant, nurse.userId(), appointmentId, false, true);
         ObservationView result = findNurseOwn(
             tenant, appointmentId, nurse.userId(), scope.unitId());
         audit.write(tenant, nurse.userId(), "NURSING_OBSERVATION_READ",
@@ -110,7 +110,7 @@ public class NursingObservationController {
         Authentication auth) {
         var nurse = requireNurse(auth, tenant);
         AppointmentScope scope = requireNurseAppointmentScope(
-            tenant, nurse.userId(), appointmentId, false);
+            tenant, nurse.userId(), appointmentId, false, false);
         validateMeasurementTimestamp(input.measurements(), input.measuredAt());
 
         ObservationView before = findNurseOwn(
@@ -155,7 +155,7 @@ public class NursingObservationController {
         Authentication auth) {
         var nurse = requireNurse(auth, tenant);
         AppointmentScope scope = requireNurseAppointmentScope(
-            tenant, nurse.userId(), appointmentId, false);
+            tenant, nurse.userId(), appointmentId, false, false);
         ObservationView before = findNurseOwn(
             tenant, appointmentId, nurse.userId(), scope.unitId());
 
@@ -279,7 +279,7 @@ public class NursingObservationController {
      * appointment state on every nurse read/write. A revoked unit grant fails closed.
      */
     private AppointmentScope requireNurseAppointmentScope(
-        UUID tenant, UUID nurse, UUID appointment, boolean requireCheckIn) {
+        UUID tenant, UUID nurse, UUID appointment, boolean requireCheckIn, boolean allowCompleted) {
         List<AppointmentScope> rows = jdbc.query("""
             SELECT a.unit_id,a.practitioner_user_id
             FROM appointments a
@@ -291,14 +291,15 @@ public class NursingObservationController {
             JOIN patients p
               ON p.tenant_id=a.tenant_id AND p.id=a.patient_id
             WHERE a.tenant_id=:tenant AND a.id=:appointment
-              AND a.status IN ('CONFIRMED','IN_PROGRESS')
+              AND (a.status IN ('CONFIRMED','IN_PROGRESS') OR (:allowCompleted = true AND a.status = 'COMPLETED'))
               AND p.archived_at IS NULL
               AND (:requireCheckIn=false OR EXISTS (
                 SELECT 1 FROM reception_checkins rc
                 WHERE rc.tenant_id=a.tenant_id AND rc.appointment_id=a.id))
             """, new MapSqlParameterSource()
                 .addValue("tenant", tenant).addValue("appointment", appointment)
-                .addValue("nurse", nurse).addValue("requireCheckIn", requireCheckIn),
+                .addValue("nurse", nurse).addValue("requireCheckIn", requireCheckIn)
+                .addValue("allowCompleted", allowCompleted),
             (rs, row) -> new AppointmentScope(
                 rs.getObject("unit_id", UUID.class),
                 rs.getObject("practitioner_user_id", UUID.class)));
