@@ -47,9 +47,14 @@ export default function StaffDashboard() {
             Marcações e pesquisa de pacientes ligadas ao servidor.
           </p>
         </div>
-        <Button className="gap-2" onClick={() => navigate("/marcacoes")}>
-          <CalendarDays className="h-4 w-4" /> Gerir marcações
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => navigate("/recepcao/fila")}>
+            <Users className="mr-2 h-4 w-4" /> Chegadas e fila
+          </Button>
+          <Button className="gap-2" onClick={() => navigate("/marcacoes")}>
+            <CalendarDays className="h-4 w-4" /> Gerir marcações
+          </Button>
+        </div>
       </header>
       <p className="border rounded-lg p-3 text-xs text-muted-foreground bg-muted/30">
         A data de hoje é calculada no dispositivo até existir um fuso horário próprio da clínica.
