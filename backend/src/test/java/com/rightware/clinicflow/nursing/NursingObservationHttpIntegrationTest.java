@@ -391,9 +391,11 @@ class NursingObservationHttpIntegrationTest {
             .andExpect(jsonPath("$.acknowledgedAt").isEmpty())
             .andReturn();
 
-        UUID correctionId=UUID.fromString(
-            new com.fasterxml.jackson.databind.ObjectMapper()
-                .readTree(first.getResponse().getContentAsString()).get("id").asText());
+        var idMatcher=java.util.regex.Pattern.compile(
+            "\"id\"\\s*:\\s*\"([^\"]+)\"")
+            .matcher(first.getResponse().getContentAsString());
+        assertTrue(idMatcher.find());
+        UUID correctionId=UUID.fromString(idMatcher.group(1));
 
         mvc.perform(post("/api/v1/nursing/observations/"+appointment+"/addenda")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nEmail))
