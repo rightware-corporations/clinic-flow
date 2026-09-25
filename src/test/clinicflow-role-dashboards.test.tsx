@@ -9,7 +9,7 @@ import PatientDashboard from "@/pages/PatientDashboard";
 import InternDashboard from "@/pages/InternDashboard";
 import {
   listAppointments, listPatients, listClinicServices,
-  listProfessionals, listClinicalReports, me,
+  listProfessionals, listClinicalReports, listMyPatientArrivals, me,
 } from "@/lib/clinicflow-api";
 
 vi.mock("@/components/layout/DashboardLayout", () => ({
@@ -22,6 +22,7 @@ vi.mock("@/lib/clinicflow-api", () => ({
   listClinicServices: vi.fn(),
   listProfessionals: vi.fn(),
   listClinicalReports: vi.fn(),
+  listMyPatientArrivals: vi.fn(),
   me: vi.fn(),
 }));
 function renderPage(page: React.ReactElement, route = "/dashboard") {
@@ -57,6 +58,7 @@ beforeEach(() => {
   });
   vi.mocked(listClinicServices).mockReset().mockResolvedValue([]);
   vi.mocked(listProfessionals).mockReset().mockResolvedValue([]);
+  vi.mocked(listMyPatientArrivals).mockReset().mockResolvedValue([]);
   vi.mocked(listClinicalReports).mockReset().mockResolvedValue({
     items: [], total: 0, page: 0, size: 30,
   });
@@ -105,6 +107,27 @@ describe("CF-B8 operational dashboards", () => {
     expect(screen.queryByText("Relatório forjado")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Abrir agenda" }));
     expect(await screen.findByText("Agenda autenticada")).toBeInTheDocument();
+  });
+
+  it("clinician sees a reception call for an assigned appointment", async () => {
+    vi.mocked(listAppointments).mockResolvedValue([appointment]);
+    vi.mocked(listMyPatientArrivals).mockResolvedValue([
+      { appointmentId: appointment.id, queueStatus: "CALLED",
+        arrivedAt: "2026-09-24T08:50:00+02:00", calledAt: "2026-09-24T08:55:00+02:00" },
+    ]);
+    renderPage(<PractitionerDashboard />);
+    expect(await screen.findByText("Chamado pela recepção")).toBeInTheDocument();
+    expect(listMyPatientArrivals).toHaveBeenCalledWith(expect.any(String));
+    expect(screen.queryByText("Sem chegada registada")).not.toBeInTheDocument();
+  });
+
+  it("an arrivals outage never hides the doctor's agenda or invents a nonarrival", async () => {
+    vi.mocked(listAppointments).mockResolvedValue([appointment]);
+    vi.mocked(listMyPatientArrivals).mockRejectedValue(new Error("unavailable"));
+    renderPage(<PractitionerDashboard />);
+    expect(await screen.findByText("Paciente da API")).toBeInTheDocument();
+    expect(await screen.findByText("Estado de chegada indisponível.")).toBeInTheDocument();
+    expect(screen.queryByText("Sem chegada registada")).not.toBeInTheDocument();
   });
 
   it("patient portal does not invent consultations before identity binding exists", async () => {
