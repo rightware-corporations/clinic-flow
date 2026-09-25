@@ -176,6 +176,27 @@ class NursingObservationHttpIntegrationTest {
             .andExpect(jsonPath("$.version").value(3));
 
         jdbc.update("""
+            UPDATE appointments SET status='COMPLETED'
+            WHERE tenant_id=:tenant AND id=:appointment
+            """,Map.of("tenant",tenant,"appointment",appointment));
+
+        mvc.perform(get("/api/v1/nursing/observations/"+appointment)
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nurseEmail))
+                .header("X-Clinicflow-Tenant",tenant))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"))
+            .andExpect(jsonPath("$.observationNotes").value(contentBefore));
+
+        mvc.perform(put("/api/v1/nursing/observations/"+appointment)
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(nurseEmail))
+                .with(csrf()).header("X-Clinicflow-Tenant",tenant)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"version":3,"observationNotes":"overwrite attempted"}
+                    """))
+            .andExpect(status().isNotFound());
+
+        jdbc.update("""
             DELETE FROM nursing_unit_assignments
             WHERE tenant_id=:tenant AND nurse_user_id=:nurse AND unit_id=:unit
             """,Map.of("tenant",tenant,"nurse",nurse,"unit",unit));
